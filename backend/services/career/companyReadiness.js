@@ -1,11 +1,8 @@
-const fs = require('fs');
-const path = require('path');
 const ruleEngine = require('./ruleEngine');
-
-const PROFILES_DIR = path.join(__dirname, '..', '..', 'data', 'companyProfiles');
+const companyProfileProvider = require('./companyProfileProvider');
 
 /**
- * Calculates readiness details dynamically based on JSON company profiles.
+ * Calculates readiness details dynamically based on JSON company profiles, including placement ranking.
  */
 exports.calculateCompanyReadiness = (parsedData, userProfile) => {
   const readinessResults = [];
@@ -17,12 +14,8 @@ exports.calculateCompanyReadiness = (parsedData, userProfile) => {
     confidence = 'Medium';
   }
 
-  let files = [];
-  try {
-    files = fs.readdirSync(PROFILES_DIR).filter(f => f.endsWith('.json'));
-  } catch (err) {
-    console.error('[Company Readiness] Failed to read company profiles directory:', err);
-  }
+  // Load profiles using the Provider abstraction layer
+  const profiles = companyProfileProvider.getCompanyProfiles();
 
   // Compile candidate skills
   const resumeSkills = parsedData?.skills || [];
@@ -37,17 +30,20 @@ exports.calculateCompanyReadiness = (parsedData, userProfile) => {
     ...profileSkills.map(s => s.trim())
   ])).map(s => s.toLowerCase());
 
-  files.forEach(file => {
+  profiles.forEach(profile => {
     try {
-      const filePath = path.join(PROFILES_DIR, file);
-      const profile = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-
       // Map profile config parameters to criteria weights
       const isProduct = profile.minimumCGPA >= 7.5;
       const criteria = {
         targetSkills: [...profile.requiredSkills, ...profile.preferredSkills],
         targetMinYears: profile.experienceLevel === 'Experienced' ? 2 : 0,
         targetMinCgpa: profile.minimumCGPA,
+        internshipPreferred: profile.internshipPreferred,
+        openSourcePreferred: profile.openSourcePreferred,
+        systemDesignRequired: profile.systemDesignRequired,
+        dsaLevel: profile.dsaLevel,
+        communicationWeight: profile.communicationWeight,
+        leadershipWeight: profile.leadershipWeight,
         weights: isProduct 
           ? { skills: 0.35, projects: 0.25, experience: 0.15, education: 0.15, resumeQuality: 0.05, certifications: 0.05 }
           : { skills: 0.20, projects: 0.15, experience: 0.05, education: 0.20, resumeQuality: 0.20, certifications: 0.20 }
@@ -128,8 +124,17 @@ exports.calculateCompanyReadiness = (parsedData, userProfile) => {
         estimatedPrepTime
       });
     } catch (err) {
-      console.error(`[Company Readiness] Failed to evaluate profile file: ${file}`, err);
+      console.error(`[Company Readiness] Failed to evaluate profile: ${profile.company}`, err);
     }
+  });
+
+  // Calculate and Assign Rankings (1 to 15)
+  // Sort in descending order of readiness score
+  const sorted = [...readinessResults].sort((a, b) => b.readinessPercent - a.readinessPercent);
+  
+  readinessResults.forEach(item => {
+    const rankIndex = sorted.findIndex(s => s.companyName === item.companyName);
+    item.rank = rankIndex + 1; // 1-indexed
   });
 
   return readinessResults;

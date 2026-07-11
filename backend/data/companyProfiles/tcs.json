@@ -22,5 +22,11 @@
   "preferredCertifications": [
     "Java SE Certified Associate"
   ],
-  "experienceLevel": "Fresher"
+  "experienceLevel": "Fresher",
+  "internshipPreferred": false,
+  "openSourcePreferred": false,
+  "systemDesignRequired": false,
+  "dsaLevel": "Easy",
+  "communicationWeight": 7,
+  "leadershipWeight": 3
 }

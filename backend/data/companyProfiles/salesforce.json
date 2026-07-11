@@ -23,5 +23,11 @@
   "preferredCertifications": [
     "Salesforce Certified Platform Developer I"
   ],
-  "experienceLevel": "Fresher"
+  "experienceLevel": "Fresher",
+  "internshipPreferred": true,
+  "openSourcePreferred": false,
+  "systemDesignRequired": true,
+  "dsaLevel": "Medium",
+  "communicationWeight": 8,
+  "leadershipWeight": 4
 }

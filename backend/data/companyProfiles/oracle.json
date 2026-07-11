@@ -23,5 +23,11 @@
   "preferredCertifications": [
     "Oracle Certified Professional: Java SE Developer"
   ],
-  "experienceLevel": "Fresher"
+  "experienceLevel": "Fresher",
+  "internshipPreferred": true,
+  "openSourcePreferred": false,
+  "systemDesignRequired": true,
+  "dsaLevel": "Medium",
+  "communicationWeight": 8,
+  "leadershipWeight": 4
 }

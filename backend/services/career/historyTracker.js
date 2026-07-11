@@ -1,9 +1,9 @@
 const CareerHistory = require('../../models/CareerHistory');
 
 /**
- * Saves a career analysis checkpoint in MongoDB.
+ * Saves a career analysis checkpoint in MongoDB, including detailed skills/projects inventory.
  */
-exports.saveSnapshot = async (userId, careerScore, skillsCount, readyCompaniesCount, resumeHash) => {
+exports.saveSnapshot = async (userId, careerScore, skillsCount, readyCompaniesCount, resumeHash, skills = [], projects = [], eligibleCompanies = []) => {
   try {
     // Avoid duplicate snapshots for identical hashes in same session
     if (resumeHash && resumeHash !== 'manual_profile') {
@@ -17,6 +17,9 @@ exports.saveSnapshot = async (userId, careerScore, skillsCount, readyCompaniesCo
       skillsCount,
       readyCompaniesCount,
       resumeHash,
+      skills,
+      projects,
+      eligibleCompanies,
       analyzedAt: new Date()
     });
   } catch (err) {
@@ -26,7 +29,7 @@ exports.saveSnapshot = async (userId, careerScore, skillsCount, readyCompaniesCo
 };
 
 /**
- * Computes progress comparisons between current and previous resume/profile snapshots.
+ * Computes progress comparisons between current and previous resume/profile snapshots, including details of what changed.
  */
 exports.getProgressComparison = async (userId) => {
   try {
@@ -39,6 +42,9 @@ exports.getProgressComparison = async (userId) => {
         improvementPercent: 0,
         skillGrowth: 0,
         readinessGrowth: 0,
+        newSkills: [],
+        projectsAdded: [],
+        companiesUnlocked: [],
         historyList: []
       };
     }
@@ -57,12 +63,48 @@ exports.getProgressComparison = async (userId) => {
     const skillGrowth = current.skillsCount - (previous ? previous.skillsCount : 0);
     const readinessGrowth = current.readyCompaniesCount - (previous ? previous.readyCompaniesCount : 0);
 
+    // Identify what changed (Resume Evolution details)
+    const newSkills = [];
+    const projectsAdded = [];
+    const companiesUnlocked = [];
+
+    if (previous) {
+      const prevSkillsLower = new Set((previous.skills || []).map(s => s.toLowerCase().trim()));
+      (current.skills || []).forEach(skill => {
+        if (!prevSkillsLower.has(skill.toLowerCase().trim())) {
+          newSkills.push(skill);
+        }
+      });
+
+      const prevProjectsLower = new Set((previous.projects || []).map(p => p.toLowerCase().trim()));
+      (current.projects || []).forEach(proj => {
+        if (!prevProjectsLower.has(proj.toLowerCase().trim())) {
+          projectsAdded.push(proj);
+        }
+      });
+
+      const prevCompaniesLower = new Set((previous.eligibleCompanies || []).map(c => c.toLowerCase().trim()));
+      (current.eligibleCompanies || []).forEach(company => {
+        if (!prevCompaniesLower.has(company.toLowerCase().trim())) {
+          companiesUnlocked.push(company);
+        }
+      });
+    } else {
+      // First upload: all current items are considered "new/added"
+      newSkills.push(...(current.skills || []).slice(0, 5));
+      projectsAdded.push(...(current.projects || []));
+      companiesUnlocked.push(...(current.eligibleCompanies || []).slice(0, 3));
+    }
+
     return {
       previousCareerScore,
       currentCareerScore,
       improvementPercent,
       skillGrowth,
       readinessGrowth,
+      newSkills,
+      projectsAdded,
+      companiesUnlocked,
       historyList: history.map(h => ({
         score: h.careerScore,
         skillsCount: h.skillsCount,

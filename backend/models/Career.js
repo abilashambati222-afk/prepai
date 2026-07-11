@@ -11,7 +11,8 @@ const companyReadinessSchema = new mongoose.Schema({
   strengths: { type: [String], default: [] },
   missing: { type: [String], default: [] },
   projectsRequired: { type: String, default: '' },
-  estimatedPrepTime: { type: String, default: '' }
+  estimatedPrepTime: { type: String, default: '' },
+  rank: { type: Number, default: 15 }
 });
 
 const companyRecommendationsSchema = new mongoose.Schema({
@@ -43,7 +44,9 @@ const weeklyGoalSchema = new mongoose.Schema({
   week: { type: Number, required: true },
   goal: { type: String, required: true },
   topics: { type: [String], default: [] },
-  milestone: { type: String, default: '' }
+  milestone: { type: String, default: '' },
+  practiceTasks: { type: [String], default: [] },
+  expectedProgress: { type: Number, default: 0 }
 });
 
 const monthlyGoalSchema = new mongoose.Schema({

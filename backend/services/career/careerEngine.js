@@ -150,7 +150,7 @@ exports.analyzeCareerProfile = async (user, jobDescriptionId = null) => {
     "companyRecommendationsExplanation": "Why the candidate stands ready or falls short across these groups.",
     "roadmap": {
       "weeklyGoals": [
-        { "week": 1, "goal": "Goal name", "topics": ["Topic A", "Topic B"], "milestone": "Weekly checkpoint" }
+        { "week": 1, "goal": "Goal name", "topics": ["Topic A", "Topic B"], "milestone": "Weekly checkpoint", "practiceTasks": ["e.g. 20 LeetCode Questions", "Finish Striver Sheet Section"], "expectedProgress": 12 }
       ],
       "monthlyGoals": [
         { "month": 1, "goal": "Goal name", "milestones": ["M1", "M2"] }
@@ -262,7 +262,10 @@ exports.analyzeCareerProfile = async (user, jobDescriptionId = null) => {
     careerScore,
     candidateSkills.length,
     ready.length,
-    resumeHash
+    resumeHash,
+    candidateSkills,
+    parsedData?.projects?.map(p => p.title || p) || [],
+    ready
   );
 
   return {

@@ -18,5 +18,11 @@
   ],
   "requiredProjects": 1,
   "preferredCertifications": [],
-  "experienceLevel": "Fresher"
+  "experienceLevel": "Fresher",
+  "internshipPreferred": false,
+  "openSourcePreferred": false,
+  "systemDesignRequired": false,
+  "dsaLevel": "Easy",
+  "communicationWeight": 7,
+  "leadershipWeight": 3
 }

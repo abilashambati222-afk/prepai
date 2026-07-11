@@ -393,6 +393,51 @@ export default function CareerPage() {
                       </span>
                     </div>
                   </div>
+
+                  {/* Detailed list of additions */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-3 border-t border-brand-border/30 text-[10px]">
+                    {/* New Skills */}
+                    <div className="space-y-1 bg-white/2 p-2.5 rounded-lg border border-brand-border/30">
+                      <span className="font-extrabold uppercase text-[8px] tracking-wide text-brand-primary block">New Skills Gained</span>
+                      {historyData.newSkills && historyData.newSkills.length > 0 ? (
+                        <div className="flex flex-wrap gap-1 pt-1">
+                          {historyData.newSkills.map(s => (
+                            <span key={s} className="px-1.5 py-0.5 rounded bg-brand-primary/10 border border-brand-primary/20 text-[8px] font-semibold text-brand-primary">+{s}</span>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-slate-500 italic text-[9px] block pt-1">No new skills detected</span>
+                      )}
+                    </div>
+
+                    {/* Projects Added */}
+                    <div className="space-y-1 bg-white/2 p-2.5 rounded-lg border border-brand-border/30">
+                      <span className="font-extrabold uppercase text-[8px] tracking-wide text-brand-secondary block">Projects Added</span>
+                      {historyData.projectsAdded && historyData.projectsAdded.length > 0 ? (
+                        <div className="space-y-0.5 pt-1">
+                          {historyData.projectsAdded.map(p => (
+                            <div key={p} className="text-[9px] text-slate-300 font-medium truncate">🚀 {p}</div>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-slate-500 italic text-[9px] block pt-1">No new projects listed</span>
+                      )}
+                    </div>
+
+                    {/* Companies Unlocked */}
+                    <div className="space-y-1 bg-white/2 p-2.5 rounded-lg border border-brand-border/30">
+                      <span className="font-extrabold uppercase text-[8px] tracking-wide text-brand-accent block">Companies Unlocked</span>
+                      {historyData.companiesUnlocked && historyData.companiesUnlocked.length > 0 ? (
+                        <div className="flex flex-wrap gap-1 pt-1">
+                          {historyData.companiesUnlocked.map(c => (
+                            <span key={c} className="px-1.5 py-0.5 rounded bg-brand-accent/10 border border-brand-accent/20 text-[8px] font-semibold text-brand-accent">🔓 {c}</span>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-slate-500 italic text-[9px] block pt-1">Target matches unchanged</span>
+                      )}
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -441,7 +486,12 @@ export default function CareerPage() {
                           <div className="flex items-center gap-3">
                             <ProgressRing radius={28} stroke={4} progress={c.readinessPercent} colorClass={getProgressColor(c.readinessPercent)} sizeText="text-xs" />
                             <div>
-                              <h4 className="text-xs font-bold text-white group-hover:text-brand-primary transition-colors">{c.companyName}</h4>
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <h4 className="text-xs font-bold text-white group-hover:text-brand-primary transition-colors">{c.companyName}</h4>
+                                <span className="text-[8px] bg-white/5 text-slate-400 px-1.5 py-0.5 rounded font-black border border-brand-border/40">
+                                  Rank {c.rank || 15} / 15
+                                </span>
+                              </div>
                               <span className={`inline-flex items-center mt-1 px-2.5 py-0.5 rounded text-[8px] font-extrabold uppercase border ${getReadinessLevelBadge(c.readinessLevel)}`}>
                                 {c.readinessLevel}
                               </span>
@@ -574,7 +624,17 @@ export default function CareerPage() {
                       {salaryPrediction.factors?.confidence || 'Medium'}
                     </span>
                   </div>
-                  <div className="col-span-2 border-t border-brand-border/30 mt-1 pt-1 flex justify-between items-center text-[8px] font-medium">
+                  {salaryPrediction.factors?.confidenceReasons && salaryPrediction.factors.confidenceReasons.length > 0 && (
+                    <div className="col-span-2 border-t border-brand-border/30 mt-1.5 pt-1.5 space-y-1">
+                      <span className="text-slate-500 font-bold uppercase tracking-wider text-[8px] block">Confidence Rationale</span>
+                      <div className="flex flex-wrap gap-1">
+                        {salaryPrediction.factors.confidenceReasons.map((r, rIdx) => (
+                          <span key={rIdx} className="px-1.5 py-0.5 rounded bg-white/5 border border-brand-border/30 text-[8px] text-slate-300 font-semibold block">{r}</span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  <div className="col-span-2 border-t border-brand-border/30 mt-1.5 pt-1.5 flex justify-between items-center text-[8px] font-medium">
                     <span className="text-slate-500 font-bold uppercase tracking-wider">Parameters</span>
                     <span className="text-slate-400">Location: {salaryPrediction.factors?.location || 'India'} | Role: {salaryPrediction.factors?.targetCompany || 'Software Engineer'}</span>
                   </div>
@@ -809,6 +869,31 @@ export default function CareerPage() {
                             {t}
                           </span>
                         ))}
+                      </div>
+
+                      {/* Practice checklist & progress bar */}
+                      <div className="pt-2.5 pl-3.5 border-l border-brand-border/40 space-y-2 max-w-lg">
+                        {wk.practiceTasks && wk.practiceTasks.length > 0 && (
+                          <div className="space-y-1">
+                            <span className="text-[8px] text-slate-500 font-bold uppercase tracking-wider block">Weekly Worksheet & Practice</span>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              {wk.practiceTasks.map((task, tIdx) => (
+                                <div key={tIdx} className="flex items-center gap-2 text-[9px] text-slate-300 font-medium">
+                                  <input type="checkbox" readOnly checked className="accent-brand-primary w-3.5 h-3.5 rounded border-brand-border" />
+                                  <span className="truncate">{task}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        
+                        <div className="flex items-center gap-3">
+                          <span className="text-[8px] text-slate-500 font-bold uppercase tracking-wider">Expected Progress:</span>
+                          <div className="flex-1 bg-brand-dark/85 h-2 rounded-full overflow-hidden p-[1px] border border-brand-border/60 max-w-[120px]">
+                            <div className="bg-gradient-to-r from-brand-primary to-brand-secondary h-full rounded-full" style={{ width: `${wk.expectedProgress || 0}%` }} />
+                          </div>
+                          <span className="text-[9px] font-extrabold text-brand-primary">{wk.expectedProgress || 0}%</span>
+                        </div>
                       </div>
                     </motion.div>
                   ))}

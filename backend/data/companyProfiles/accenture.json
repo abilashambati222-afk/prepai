@@ -19,5 +19,11 @@
   "preferredCertifications": [
     "AWS Certified Cloud Practitioner"
   ],
-  "experienceLevel": "Fresher"
+  "experienceLevel": "Fresher",
+  "internshipPreferred": true,
+  "openSourcePreferred": false,
+  "systemDesignRequired": false,
+  "dsaLevel": "Easy",
+  "communicationWeight": 7,
+  "leadershipWeight": 3
 }

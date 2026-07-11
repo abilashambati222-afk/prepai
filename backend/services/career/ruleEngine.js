@@ -28,15 +28,14 @@ const categorizeSkill = (skillName) => {
     }
   }
 
-  // Fallback default
   return 'Programming'; 
 };
 
 /**
- * Rule Engine - Reusable scoring engine
+ * Rule Engine - Premium scoring calculations based on advanced hiring categories
  */
 exports.evaluateResume = (parsedData, userProfile, criteria = {}) => {
-  // 1. Gather all candidate skills from parsed resume & user profile fields
+  // 1. Compile Skills
   const resumeSkills = parsedData?.skills || [];
   const profileSkills = [
     ...(userProfile?.programmingLanguages || []),
@@ -44,19 +43,17 @@ exports.evaluateResume = (parsedData, userProfile, criteria = {}) => {
     ...(userProfile?.databases || []),
     ...(userProfile?.tools || [])
   ];
-
-  // Combine and deduplicate
-  const allSkillsSet = new Set([
+  const candidateSkills = Array.from(new Set([
     ...resumeSkills.map(s => s.trim()),
     ...profileSkills.map(s => s.trim())
-  ]);
-  const candidateSkills = Array.from(allSkillsSet);
+  ]));
+  const candidateSkillsNorm = candidateSkills.map(s => normalize(s));
 
-  // 2. Extract Experience details
+  // 2. Extract Work History & Projects
   const resumeExperience = parsedData?.experience || [];
   const experienceLevel = userProfile?.experienceLevel || 'Student';
+  const resumeProjects = parsedData?.projects || [];
   
-  // Calculate total months of experience from experience list if available
   let experienceMonths = 0;
   resumeExperience.forEach(exp => {
     const durationStr = exp.duration || exp.dateRange || '';
@@ -69,13 +66,12 @@ exports.evaluateResume = (parsedData, userProfile, criteria = {}) => {
   });
   const experienceYears = experienceMonths / 12;
 
-  // 3. Extract Education details
+  // 3. Extract Education
   const resumeEducation = parsedData?.education || [];
   const profileCgpa = userProfile?.cgpa || null;
   const profileCollege = userProfile?.college || '';
   const profileDegree = userProfile?.degree || '';
 
-  // Get max CGPA from resume education or profile
   let cgpa = profileCgpa;
   resumeEducation.forEach(edu => {
     const text = (edu.gpa || edu.cgpa || edu.grade || '').toString();
@@ -86,13 +82,21 @@ exports.evaluateResume = (parsedData, userProfile, criteria = {}) => {
     }
   });
 
-  // 4. Extract Projects
-  const resumeProjects = parsedData?.projects || [];
+  const fullResumeText = normalize(JSON.stringify(parsedData));
 
-  // 5. Extract Certifications
-  const resumeCertifications = parsedData?.certifications || [];
+  // 4. Retrieve Advanced Hiring Categories from criteria
+  const targetSkills = criteria.targetSkills || [];
+  const targetMinCgpa = criteria.targetMinCgpa || 6.0;
+  const targetMinYears = criteria.targetMinYears || 0;
+  
+  const internshipPreferred = criteria.internshipPreferred || false;
+  const openSourcePreferred = criteria.openSourcePreferred || false;
+  const systemDesignRequired = criteria.systemDesignRequired || false;
+  const dsaLevel = criteria.dsaLevel || 'Easy';
+  const communicationWeight = criteria.communicationWeight || 5;
+  const leadershipWeight = criteria.leadershipWeight || 2;
 
-  // Define default factor weights if not specified
+  // Weights configuration
   const weights = criteria.weights || {
     skills: 0.30,
     projects: 0.20,
@@ -102,115 +106,129 @@ exports.evaluateResume = (parsedData, userProfile, criteria = {}) => {
     certifications: 0.10
   };
 
-  const targetSkills = criteria.targetSkills || [];
-  const targetMinYears = criteria.targetMinYears || 0;
-  const targetMinCgpa = criteria.targetMinCgpa || 6.0;
-
   // =====================================
   // FACTOR 1: SKILLS SCORING (0-100)
   // =====================================
   let skillsScore = 0;
   let skillsReasons = [];
+
   if (targetSkills.length > 0) {
     const matchedSkills = [];
     const missingSkills = [];
-    
     targetSkills.forEach(tSkill => {
       const normT = normalize(tSkill);
-      const isMatched = candidateSkills.some(cSkill => {
-        const normC = normalize(cSkill);
-        return normC === normT || normC.includes(normT) || normT.includes(normC);
-      });
-      if (isMatched) {
-        matchedSkills.push(tSkill);
-      } else {
-        missingSkills.push(tSkill);
-      }
+      const isMatched = candidateSkillsNorm.some(cand => cand === normT || cand.includes(normT) || normT.includes(cand));
+      if (isMatched) matchedSkills.push(tSkill);
+      else missingSkills.push(tSkill);
     });
 
     const matchRatio = matchedSkills.length / targetSkills.length;
     skillsScore = Math.round(matchRatio * 100);
-    skillsReasons.push(`Matched ${matchedSkills.length} out of ${targetSkills.length} required skills.`);
-    if (missingSkills.length > 0) {
-      skillsReasons.push(`Missing key target skills: ${missingSkills.slice(0, 3).join(', ')}.`);
-    }
+    skillsReasons.push(`Matched ${matchedSkills.length} out of ${targetSkills.length} required skill keywords.`);
   } else {
-    if (candidateSkills.length >= 10) skillsScore = 100;
-    else if (candidateSkills.length >= 6) skillsScore = 80;
-    else if (candidateSkills.length >= 3) skillsScore = 60;
-    else if (candidateSkills.length > 0) skillsScore = 40;
-    else skillsScore = 10;
-    skillsReasons.push(`Inventory contains ${candidateSkills.length} skills.`);
+    skillsScore = candidateSkills.length >= 10 ? 100 : candidateSkills.length >= 6 ? 80 : 50;
+    skillsReasons.push(`Inventory lists ${candidateSkills.length} skill tags.`);
+  }
+
+  // DSA Check
+  const dsaKeywords = {
+    Advanced: ['dynamic programming', 'graph', 'tree', 'trie', 'backtracking', 'dsa', 'recursion', 'linked list', 'bst', ' heap'],
+    Medium: ['sorting', 'searching', 'stack', 'queue', 'hash table', 'array', 'string'],
+    Easy: ['array', 'string', 'loop', 'variables']
+  };
+
+  const currentDsaKeywords = dsaKeywords[dsaLevel];
+  let dsaMatchCount = 0;
+  currentDsaKeywords.forEach(kw => {
+    if (fullResumeText.includes(kw)) dsaMatchCount++;
+  });
+
+  const dsaTargetCount = dsaLevel === 'Advanced' ? 3 : dsaLevel === 'Medium' ? 2 : 1;
+  if (dsaMatchCount < dsaTargetCount) {
+    skillsScore = Math.max(skillsScore - 15, 30);
+    skillsReasons.push(`Requires ${dsaLevel} Data Structures & Algorithms proficiency (DP, Graphs, Trees).`);
+  } else {
+    skillsScore = Math.min(skillsScore + 5, 100);
+    skillsReasons.push(`Meets ${dsaLevel}-level DSA requirements.`);
+  }
+
+  // Open Source Bonus
+  if (openSourcePreferred) {
+    const hasOpenSource = ['open source', 'open-source', 'contributor', 'github contribution', 'pr submission'].some(kw => fullResumeText.includes(kw));
+    if (hasOpenSource) {
+      skillsScore = Math.min(skillsScore + 10, 100);
+      skillsReasons.push('Detected community or open-source participation.');
+    } else {
+      skillsScore = Math.max(skillsScore - 5, 20);
+      skillsReasons.push('Prefers developers with open-source project history.');
+    }
   }
 
   // =====================================
   // FACTOR 2: PROJECTS SCORING (0-100)
   // =====================================
-  let projectsScore = 0;
+  let projectsScore = 50;
   let projectsReasons = [];
   const projectCount = resumeProjects.length;
 
-  if (projectCount === 0) {
-    projectsScore = 20;
-    projectsReasons.push('No projects found in resume.');
+  if (projectCount >= 3) {
+    projectsScore = 100;
+    projectsReasons.push('Excellent quantity of developer projects.');
+  } else if (projectCount === 2) {
+    projectsScore = 80;
+    projectsReasons.push('Lists 2 developer projects.');
   } else if (projectCount === 1) {
     projectsScore = 60;
-    projectsReasons.push('1 project listed. Suggest adding at least 2-3 projects.');
-  } else if (projectCount === 2) {
-    projectsScore = 85;
-    projectsReasons.push('2 projects listed. Good demonstration of practical applications.');
+    projectsReasons.push('Suggest adding at least 2-3 detailed project blocks.');
   } else {
-    projectsScore = 100;
-    projectsReasons.push(`${projectCount} projects listed. Excellent project portfolio.`);
+    projectsScore = 20;
+    projectsReasons.push('Missing projects section.');
   }
 
-  // Bonus for complex project description keywords
-  const complexityKeywords = ['scalable', 'optimized', 'performance', 'real-time', 'aws', 'docker', 'kubernetes', 'deployment', 'ml', 'ai', 'database', 'rest api', 'system design'];
-  let complexCount = 0;
-  resumeProjects.forEach(proj => {
-    const text = normalize(`${proj.title || ''} ${proj.description || ''}`);
-    complexityKeywords.forEach(word => {
-      if (text.includes(word)) complexCount++;
-    });
-  });
-  if (complexCount > 0 && projectsScore < 100) {
-    projectsScore = Math.min(projectsScore + Math.min(complexCount * 5, 15), 100);
-    projectsReasons.push('Detected project complexity (e.g., databases, deployment, or optimization).');
+  // System Design Check
+  if (systemDesignRequired) {
+    const hasSysDesign = ['system design', 'architecture', 'scalability', 'microservices', 'load balancer', 'caching', 'redis', 'kafka', 'docker', 'kubernetes'].some(kw => fullResumeText.includes(kw));
+    if (hasSysDesign) {
+      projectsScore = Math.min(projectsScore + 5, 100);
+      projectsReasons.push('Verified systems engineering or architecture keywords.');
+    } else {
+      projectsScore = Math.max(projectsScore - 15, 30);
+      projectsReasons.push('Requires system design understanding (Scalability, Caching, Docker).');
+    }
   }
 
   // =====================================
   // FACTOR 3: EXPERIENCE SCORING (0-100)
   // =====================================
-  let experienceScore = 0;
+  let experienceScore = 50;
   let experienceReasons = [];
 
-  if (experienceLevel === 'Student' || experienceLevel === 'Fresher') {
-    const hasInternship = resumeExperience.some(exp => 
-      normalize(exp.role || exp.title || '').includes('intern') || 
-      normalize(exp.description || '').includes('intern')
-    );
+  const hasInternship = resumeExperience.some(exp => 
+    normalize(exp.role || exp.title || '').includes('intern') || 
+    normalize(exp.description || '').includes('intern')
+  );
 
-    if (hasInternship) {
-      experienceScore = 100;
-      experienceReasons.push('Demonstrates relevant internship experience.');
-    } else if (resumeExperience.length > 0) {
-      experienceScore = 80;
-      experienceReasons.push('Has general organizational or extracurricular experience.');
+  if (experienceLevel === 'Student' || experienceLevel === 'Fresher') {
+    if (internshipPreferred) {
+      if (hasInternship) {
+        experienceScore = 100;
+        experienceReasons.push('Matches internship target preference.');
+      } else {
+        experienceScore = 60;
+        experienceReasons.push('Prefers candidates with at least one internship profile.');
+      }
     } else {
-      experienceScore = 50;
-      experienceReasons.push('Entry-level baseline. Focus on building solid project portfolios.');
+      experienceScore = hasInternship ? 100 : 80;
+      experienceReasons.push('Meets entry-level criteria.');
     }
   } else {
     if (experienceYears >= targetMinYears) {
       experienceScore = 100;
-      experienceReasons.push(`Meets experience requirement (Has ${experienceYears.toFixed(1)} years vs target ${targetMinYears} years).`);
-    } else if (experienceYears > 0) {
+      experienceReasons.push(`Meets experience target: has ${experienceYears.toFixed(1)} yrs vs target ${targetMinYears} yrs.`);
+    } else {
       const ratio = experienceYears / Math.max(targetMinYears, 1);
       experienceScore = Math.round(ratio * 100);
-      experienceReasons.push(`Partial experience match: has ${experienceYears.toFixed(1)} years out of target ${targetMinYears} years.`);
-    } else {
-      experienceScore = 30;
-      experienceReasons.push('Experienced role target, but parsed resume indicates limited work history.');
+      experienceReasons.push(`Partial experience match: lists ${experienceYears.toFixed(1)} out of target ${targetMinYears} years.`);
     }
   }
 
@@ -221,105 +239,52 @@ exports.evaluateResume = (parsedData, userProfile, criteria = {}) => {
   let educationReasons = [];
 
   if (cgpa) {
-    let cgpaScore = 0;
-    if (cgpa >= 9.0) {
-      cgpaScore = 100;
-      educationReasons.push(`Outstanding academic standing (CGPA: ${cgpa.toFixed(2)}).`);
-    } else if (cgpa >= 8.0) {
-      cgpaScore = 90;
-      educationReasons.push(`Strong academic record (CGPA: ${cgpa.toFixed(2)}).`);
-    } else if (cgpa >= 7.0) {
-      cgpaScore = 80;
-      educationReasons.push(`Satisfactory CGPA of ${cgpa.toFixed(2)}.`);
-    } else {
-      cgpaScore = 60;
-      educationReasons.push(`Academic CGPA of ${cgpa.toFixed(2)}. Suggest focusing on skill showcases to balance academics.`);
-    }
-    
+    let cgpaScore = cgpa >= 9.0 ? 100 : cgpa >= 8.0 ? 90 : cgpa >= 7.0 ? 85 : 65;
     if (cgpa >= targetMinCgpa) {
       educationScore = cgpaScore;
+      educationReasons.push(`Academic CGPA of ${cgpa.toFixed(2)} meets criteria.`);
     } else {
       educationScore = Math.max(cgpaScore - 15, 40);
-      educationReasons.push(`CGPA is below preferred target threshold of ${targetMinCgpa}.`);
+      educationReasons.push(`CGPA is below preferred threshold of ${targetMinCgpa}.`);
     }
   } else {
-    educationReasons.push('CGPA not specified on profile or resume. Defaulting to baseline academic scoring.');
+    educationReasons.push('CGPA not specified.');
   }
 
-  const collegeStr = normalize(profileCollege || resumeEducation.map(edu => edu.institution || edu.school || '').join(' '));
-  const tier1Keywords = ['iit', 'indian institute of technology', 'nit', 'national institute of technology', 'bits pilani', 'iiit', 'bits', 'dtu', 'nsut', 'rvce', 'vit', 'srm', 'mit', 'stanford'];
-  const isTier1 = tier1Keywords.some(keyword => collegeStr.includes(keyword));
+  const collegeStr = normalize(profileCollege || resumeEducation.map(e => e.institution || e.school || '').join(' '));
+  const isTier1 = ['iit', 'nit', 'bits', 'iiit', 'vit', 'dtu', 'stanford', 'mit'].some(kw => collegeStr.includes(kw));
   if (isTier1) {
     educationScore = Math.min(educationScore + 10, 100);
-    educationReasons.push('Affiliated with a recognized tier-1 / tier-2 institution.');
-  }
-
-  const degreeStr = normalize(profileDegree || resumeEducation.map(edu => edu.degree || '').join(' '));
-  if (degreeStr.includes('mtech') || degreeStr.includes('ms') || degreeStr.includes('phd') || degreeStr.includes('master')) {
-    educationScore = Math.min(educationScore + 5, 100);
-    educationReasons.push('Advanced post-graduate degree identified.');
+    educationReasons.push('Tier-1 university credential boost.');
   }
 
   // =====================================
-  // FACTOR 5: RESUME QUALITY (0-100)
+  // FACTOR 5: RESUME QUALITY & SOFT SKILLS (0-100)
   // =====================================
-  let qualityScore = 0;
+  let qualityScore = 70;
   let qualityReasons = [];
-  
-  const sectionChecks = [
-    { name: 'Education', present: resumeEducation.length > 0, weight: 15 },
-    { name: 'Skills', present: resumeSkills.length > 0, weight: 15 },
-    { name: 'Projects', present: resumeProjects.length > 0, weight: 15 },
-    { name: 'Experience', present: resumeExperience.length > 0, weight: 15 },
-    { name: 'Summary', present: !!parsedData?.summary, weight: 10 },
-    { name: 'Contact Information', present: !!parsedData?.personalInformation?.email && !!parsedData?.personalInformation?.phone, weight: 15 },
-    { name: 'Social Links', present: !!(userProfile?.github || userProfile?.linkedin || parsedData?.links?.length > 0), weight: 15 }
-  ];
 
-  let calculatedQuality = 0;
-  const missingSections = [];
-  sectionChecks.forEach(chk => {
-    if (chk.present) {
-      calculatedQuality += chk.weight;
-    } else {
-      missingSections.push(chk.name);
-    }
+  // soft skills matching using weights
+  const softSkills = candidateSkillsNorm.filter(s => {
+    return ['communication', 'teamwork', 'leadership', 'scrum', 'agile', 'management'].some(kw => s.includes(kw));
   });
 
-  qualityScore = calculatedQuality;
-  const confidenceMultiplier = (parsedData?.metadata?.confidence || parsedData?.parsingConfidence || 85) / 100;
-  qualityScore = Math.round(qualityScore * (0.8 + 0.2 * confidenceMultiplier));
+  const softSkillsScore = Math.min((softSkills.length / 2) * 100, 100);
+  const softSkillsImpact = (softSkillsScore * (communicationWeight + leadershipWeight)) / 15;
+  qualityScore = Math.round((qualityScore * 0.7) + (softSkillsImpact * 0.3));
 
-  if (missingSections.length === 0) {
-    qualityReasons.push('All major professional resume sections are present and structured.');
-  } else {
-    qualityReasons.push(`Missing structural elements: ${missingSections.join(', ')}.`);
-  }
+  qualityReasons.push(`Soft skills evaluation (Communication weight: ${communicationWeight}, Leadership: ${leadershipWeight}).`);
 
   // =====================================
   // FACTOR 6: CERTIFICATIONS SCORING (0-100)
   // =====================================
-  let certificationsScore = 0;
+  let certificationsScore = 40;
   let certificationsReasons = [];
-  const certCount = resumeCertifications.length;
-
-  if (certCount === 0) {
-    certificationsScore = 40;
-    certificationsReasons.push('No certifications listed. Certifications add competitive credibility.');
-  } else if (certCount === 1) {
-    certificationsScore = 80;
-    certificationsReasons.push('1 certification verified.');
-  } else {
+  if (parsedData?.certifications?.length > 0) {
     certificationsScore = 100;
-    certificationsReasons.push(`${certCount} professional certifications verified.`);
-  }
-
-  const certText = normalize(resumeCertifications.map(c => c.name || c.title || c).join(' '));
-  const premiumCertKeywords = ['aws', 'azure', 'gcp', 'google cloud', 'salesforce', 'certified developer', 'scrum master', 'kubernetes', 'tensorflow', 'pmp', 'cisco', 'ccna'];
-  const hasPremium = premiumCertKeywords.some(kw => certText.includes(kw));
-  if (hasPremium) {
-    certificationsScore = Math.min(certificationsScore + 10, 100);
-    certificationsReasons.push('Holds industry-recognized specialized cloud or technology credentials.');
+    certificationsReasons.push(`Validated ${parsedData.certifications.length} credentials.`);
+  } else {
+    certificationsReasons.push('No certifications listed. Cloud credentials recommended.');
   }
 
   // =====================================

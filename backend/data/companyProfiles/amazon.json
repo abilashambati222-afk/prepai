@@ -23,5 +23,11 @@
   "preferredCertifications": [
     "AWS Certified Solutions Architect"
   ],
-  "experienceLevel": "Fresher"
+  "experienceLevel": "Fresher",
+  "internshipPreferred": true,
+  "openSourcePreferred": true,
+  "systemDesignRequired": true,
+  "dsaLevel": "Advanced",
+  "communicationWeight": 10,
+  "leadershipWeight": 5
 }

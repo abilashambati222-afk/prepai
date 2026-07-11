@@ -1,5 +1,5 @@
 /**
- * Deterministic salary prediction service (Hybrid) with factor transparency.
+ * Deterministic salary prediction service (Hybrid) with factor transparency and confidence rationales.
  */
 exports.predictSalary = (parsedData, userProfile, careerScore = 0, geminiExplanation = '') => {
   const experienceLevel = userProfile?.experienceLevel || 'Student';
@@ -36,6 +36,45 @@ exports.predictSalary = (parsedData, userProfile, careerScore = 0, geminiExplana
 
   const defaultExplanation = `Estimated package ranges in LPA (INR) calculated using profile variables. Standard engineering roles offer competitive packages depending on performance.`;
 
+  // Compute confidence reasons
+  const confidenceReasons = [];
+  const resumeExperience = parsedData?.experience || [];
+  const hasInternship = resumeExperience.some(exp => 
+    (exp.role || exp.title || '').toLowerCase().includes('intern') ||
+    (exp.description || '').toLowerCase().includes('intern')
+  );
+
+  if (skillsCount >= 10) {
+    confidenceReasons.push('Strong technical skills inventory');
+  } else if (skillsCount < 6) {
+    confidenceReasons.push('Needs to expand tool/language breadth');
+  }
+
+  const projectsCount = parsedData?.projects?.length || 0;
+  if (projectsCount >= 2) {
+    confidenceReasons.push('Good projects portfolio');
+  } else {
+    confidenceReasons.push('Weak projects profile');
+  }
+
+  if (experienceLevel === 'Student' || experienceLevel === 'Fresher') {
+    if (hasInternship) {
+      confidenceReasons.push('Demonstrates internship experience');
+    } else {
+      confidenceReasons.push('Weak internship profile');
+    }
+  }
+
+  const certsText = (parsedData?.certifications || []).map(c => (c.name || c.title || c).toLowerCase()).join(' ');
+  const hasCloudCert = ['aws', 'azure', 'gcp', 'google cloud', 'kubernetes', 'cka'].some(kw => certsText.includes(kw));
+  if (hasCloudCert) {
+    confidenceReasons.push('Holds verified cloud credentials');
+  } else {
+    confidenceReasons.push('No cloud certifications');
+  }
+
+  const confidence = skillsCount >= 10 ? 'High' : skillsCount >= 5 ? 'Medium' : 'Low';
+
   return {
     currentSalaryMin: Math.round(currentSalaryMin * 10) / 10,
     currentSalaryMax: Math.round(currentSalaryMax * 10) / 10,
@@ -45,11 +84,12 @@ exports.predictSalary = (parsedData, userProfile, careerScore = 0, geminiExplana
     explanation: geminiExplanation || defaultExplanation,
     factors: {
       experience: experienceLevel === 'Experienced' ? 'Experienced (2+ yrs)' : 'Fresher (0 yrs)',
-      projects: parsedData?.projects?.length || 0,
+      projects: projectsCount,
       careerScore: careerScore,
       targetCompany: userProfile?.targetRole || 'Software Engineer',
       location: 'India',
-      confidence: skillsCount > 10 ? 'High' : skillsCount > 5 ? 'Medium' : 'Low'
+      confidence,
+      confidenceReasons
     }
   };
 };
