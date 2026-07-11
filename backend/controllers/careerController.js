@@ -28,6 +28,7 @@ exports.analyzeCareer = async (req, res, next) => {
       career.recommendedRoles = analysisResults.recommendedRoles;
       career.roadmap = analysisResults.roadmap;
       career.resources = analysisResults.resources;
+      career.richResources = analysisResults.richResources;
       career.projects = analysisResults.projects;
       career.certifications = analysisResults.certifications;
       career.salaryPrediction = analysisResults.salaryPrediction;
@@ -59,6 +60,7 @@ exports.analyzeCareer = async (req, res, next) => {
         recommendedRoles: analysisResults.recommendedRoles,
         roadmap: analysisResults.roadmap,
         resources: analysisResults.resources,
+        richResources: analysisResults.richResources,
         projects: analysisResults.projects,
         certifications: analysisResults.certifications,
         salaryPrediction: analysisResults.salaryPrediction,
@@ -96,6 +98,7 @@ const getOrInitializeCareer = async (user) => {
       recommendedRoles: initial.recommendedRoles,
       roadmap: initial.roadmap,
       resources: initial.resources,
+      richResources: initial.richResources,
       projects: initial.projects,
       certifications: initial.certifications,
       salaryPrediction: initial.salaryPrediction,
@@ -171,7 +174,8 @@ exports.getResources = async (req, res, next) => {
     res.status(200).json({
       success: true,
       data: {
-        resources: career.resources
+        resources: career.resources,
+        richResources: career.richResources
       }
     });
   } catch (err) {

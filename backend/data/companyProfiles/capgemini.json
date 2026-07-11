@@ -1,0 +1,22 @@
+{
+  "company": "Capgemini",
+  "role": "Software Engineer",
+  "minimumCGPA": 6,
+  "requiredSkills": [
+    "Java",
+    "C#",
+    "SQL",
+    "JavaScript",
+    "HTML",
+    "CSS",
+    "Git"
+  ],
+  "preferredSkills": [
+    "Angular",
+    "React",
+    "Cloud Basics"
+  ],
+  "requiredProjects": 1,
+  "preferredCertifications": [],
+  "experienceLevel": "Fresher"
+}

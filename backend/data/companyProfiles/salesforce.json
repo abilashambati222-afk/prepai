@@ -1,0 +1,27 @@
+{
+  "company": "Salesforce",
+  "role": "Software Engineer",
+  "minimumCGPA": 7.5,
+  "requiredSkills": [
+    "DSA",
+    "Java",
+    "JavaScript",
+    "Apex",
+    "Salesforce",
+    "Cloud Computing",
+    "APIs",
+    "Git",
+    "SQL"
+  ],
+  "preferredSkills": [
+    "Docker",
+    "AWS",
+    "TypeScript",
+    "React"
+  ],
+  "requiredProjects": 2,
+  "preferredCertifications": [
+    "Salesforce Certified Platform Developer I"
+  ],
+  "experienceLevel": "Fresher"
+}

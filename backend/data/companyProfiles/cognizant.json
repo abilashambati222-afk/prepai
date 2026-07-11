@@ -1,0 +1,22 @@
+{
+  "company": "Cognizant",
+  "role": "Programmer Analyst",
+  "minimumCGPA": 6,
+  "requiredSkills": [
+    "Java",
+    "Python",
+    "SQL",
+    "JavaScript",
+    "HTML",
+    "CSS",
+    "Git"
+  ],
+  "preferredSkills": [
+    "React",
+    "Cloud Basics",
+    "Docker"
+  ],
+  "requiredProjects": 1,
+  "preferredCertifications": [],
+  "experienceLevel": "Fresher"
+}

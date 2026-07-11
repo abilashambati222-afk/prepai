@@ -1,0 +1,26 @@
+{
+  "company": "TCS",
+  "role": "System Engineer",
+  "minimumCGPA": 6,
+  "requiredSkills": [
+    "Java",
+    "Python",
+    "C",
+    "C++",
+    "SQL",
+    "HTML",
+    "CSS",
+    "JavaScript",
+    "Git"
+  ],
+  "preferredSkills": [
+    "React",
+    "Express",
+    "Bootstrap"
+  ],
+  "requiredProjects": 1,
+  "preferredCertifications": [
+    "Java SE Certified Associate"
+  ],
+  "experienceLevel": "Fresher"
+}

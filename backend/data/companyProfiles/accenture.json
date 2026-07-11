@@ -1,0 +1,23 @@
+{
+  "company": "Accenture",
+  "role": "Associate Software Engineer",
+  "minimumCGPA": 6.5,
+  "requiredSkills": [
+    "Software Engineering",
+    "Java",
+    "SQL",
+    "Cloud Computing",
+    "Agile",
+    "Git"
+  ],
+  "preferredSkills": [
+    "React",
+    "Python",
+    "DevOps"
+  ],
+  "requiredProjects": 1.5,
+  "preferredCertifications": [
+    "AWS Certified Cloud Practitioner"
+  ],
+  "experienceLevel": "Fresher"
+}

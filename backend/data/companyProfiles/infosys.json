@@ -1,0 +1,23 @@
+{
+  "company": "Infosys",
+  "role": "Systems Engineer",
+  "minimumCGPA": 6,
+  "requiredSkills": [
+    "Java",
+    "Python",
+    "C#",
+    "SQL",
+    "HTML",
+    "CSS",
+    "JavaScript",
+    "Git"
+  ],
+  "preferredSkills": [
+    "React",
+    "Node.js",
+    "Cloud Basics"
+  ],
+  "requiredProjects": 1,
+  "preferredCertifications": [],
+  "experienceLevel": "Fresher"
+}

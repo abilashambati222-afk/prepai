@@ -160,6 +160,9 @@ exports.analyzeCareerProfile = async (user, jobDescriptionId = null) => {
     "resources": [
       { "category": "Courses|Books|Documentation|YouTube|Practice Platforms", "name": "Resource Name", "type": "Free|Paid", "link": "https://..." }
     ],
+    "richResources": [
+      { "subject": "Subject Name", "primary": "Primary resource link/course", "practice": "Practice platforms", "reference": "Reference manual/book", "videos": "Recommended channels", "estimatedTime": "Preparation time target" }
+    ],
     "projects": [
       { "title": "Project Title", "techStack": ["React", "Express"], "duration": "Duration in weeks", "difficulty": "Beginner|Intermediate|Advanced", "learningOutcome": "Outcome detail" }
     ],
@@ -209,6 +212,24 @@ exports.analyzeCareerProfile = async (user, jobDescriptionId = null) => {
 
   const roadmap = roadmapGenerator.generateRoadmap(geminiData?.roadmap);
   const resources = resourceRecommendation.recommendResources(geminiData?.resources);
+  const richResources = geminiData?.richResources || [
+    {
+      subject: 'Data Structures & Algorithms (DSA)',
+      primary: 'Striver A2Z Coding Track',
+      practice: 'LeetCode Algorithms Practice',
+      reference: 'Introduction to Algorithms (CLRS)',
+      videos: 'NeetCode System Design / DSA Playlists',
+      estimatedTime: '6 Weeks'
+    },
+    {
+      subject: 'Full Stack Development',
+      primary: 'FullStackOpen University Course',
+      practice: 'Frontend Mentor Challenges',
+      reference: 'Eloquent JavaScript / MDN Web Docs',
+      videos: 'Traversy Media / Web Dev Simplified',
+      estimatedTime: '8 Weeks'
+    }
+  ];
   const projects = projectRecommendation.recommendProjects(geminiData?.projects);
 
   const certifications = geminiData?.certifications || [
@@ -219,6 +240,7 @@ exports.analyzeCareerProfile = async (user, jobDescriptionId = null) => {
   const salaryPrediction = salaryPredictor.predictSalary(
     parsedData,
     user,
+    careerScore,
     geminiData?.salaryPredictionExplanation
   );
 
@@ -251,6 +273,7 @@ exports.analyzeCareerProfile = async (user, jobDescriptionId = null) => {
     skillGapReport,
     roadmap,
     resources,
+    richResources,
     projects,
     certifications,
     salaryPrediction,

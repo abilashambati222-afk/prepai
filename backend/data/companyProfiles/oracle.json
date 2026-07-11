@@ -1,0 +1,27 @@
+{
+  "company": "Oracle",
+  "role": "Software Engineer",
+  "minimumCGPA": 7.5,
+  "requiredSkills": [
+    "DSA",
+    "Java",
+    "SQL",
+    "C++",
+    "Data Structures",
+    "Algorithms",
+    "Database Design",
+    "Git",
+    "Linux"
+  ],
+  "preferredSkills": [
+    "Docker",
+    "Kubernetes",
+    "Cloud Computing",
+    "PL/SQL"
+  ],
+  "requiredProjects": 2,
+  "preferredCertifications": [
+    "Oracle Certified Professional: Java SE Developer"
+  ],
+  "experienceLevel": "Fresher"
+}

@@ -1,0 +1,28 @@
+{
+  "company": "Google",
+  "role": "Software Engineer",
+  "minimumCGPA": 8.5,
+  "requiredSkills": [
+    "DSA",
+    "Java",
+    "C++",
+    "Python",
+    "Go",
+    "Algorithms",
+    "Data Structures",
+    "System Design",
+    "Git"
+  ],
+  "preferredSkills": [
+    "Docker",
+    "Kubernetes",
+    "AWS",
+    "Machine Learning"
+  ],
+  "requiredProjects": 3,
+  "preferredCertifications": [
+    "Google Cloud Certified Professional Cloud Architect",
+    "AWS Certified Solutions Architect"
+  ],
+  "experienceLevel": "Fresher"
+}

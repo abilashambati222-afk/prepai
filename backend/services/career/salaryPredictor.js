@@ -1,10 +1,10 @@
 /**
- * Deterministic salary prediction service (Hybrid)
+ * Deterministic salary prediction service (Hybrid) with factor transparency.
  */
-exports.predictSalary = (parsedData, userProfile, geminiExplanation = '') => {
+exports.predictSalary = (parsedData, userProfile, careerScore = 0, geminiExplanation = '') => {
   const experienceLevel = userProfile?.experienceLevel || 'Student';
   
-  // Check college tier for academic bonus
+  // Check college tier
   const college = (userProfile?.college || '').toLowerCase();
   const isTier1 = ['iit', 'nit', 'bits', 'iiit', 'mit', 'stanford'].some(kw => college.includes(kw));
 
@@ -31,11 +31,10 @@ exports.predictSalary = (parsedData, userProfile, geminiExplanation = '') => {
     currentSalaryMax += 2.0;
   }
 
-  // Calculate expected salary after completing the roadmap
   const expectedSalaryMin = Math.round(currentSalaryMin * 1.8 * 10) / 10;
   const expectedSalaryMax = Math.round(currentSalaryMax * 2.2 * 10) / 10;
 
-  const defaultExplanation = `Estimated package in LPA (INR) based on your current profile. Following the learning roadmap and completing core projects can significantly enhance your leverage for premium roles.`;
+  const defaultExplanation = `Estimated package ranges in LPA (INR) calculated using profile variables. Standard engineering roles offer competitive packages depending on performance.`;
 
   return {
     currentSalaryMin: Math.round(currentSalaryMin * 10) / 10,
@@ -43,6 +42,14 @@ exports.predictSalary = (parsedData, userProfile, geminiExplanation = '') => {
     expectedSalaryMin,
     expectedSalaryMax,
     currency: 'LPA (INR)',
-    explanation: geminiExplanation || defaultExplanation
+    explanation: geminiExplanation || defaultExplanation,
+    factors: {
+      experience: experienceLevel === 'Experienced' ? 'Experienced (2+ yrs)' : 'Fresher (0 yrs)',
+      projects: parsedData?.projects?.length || 0,
+      careerScore: careerScore,
+      targetCompany: userProfile?.targetRole || 'Software Engineer',
+      location: 'India',
+      confidence: skillsCount > 10 ? 'High' : skillsCount > 5 ? 'Medium' : 'Low'
+    }
   };
 };

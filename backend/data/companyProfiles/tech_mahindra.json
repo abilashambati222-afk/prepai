@@ -1,0 +1,21 @@
+{
+  "company": "Tech Mahindra",
+  "role": "Associate Software Engineer",
+  "minimumCGPA": 6,
+  "requiredSkills": [
+    "Java",
+    "Python",
+    "SQL",
+    "Networking",
+    "Git",
+    "Linux"
+  ],
+  "preferredSkills": [
+    "Cloud Basics",
+    "Docker",
+    "Telecom Basics"
+  ],
+  "requiredProjects": 1,
+  "preferredCertifications": [],
+  "experienceLevel": "Fresher"
+}

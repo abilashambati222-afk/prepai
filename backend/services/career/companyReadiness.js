@@ -1,105 +1,15 @@
+const fs = require('fs');
+const path = require('path');
 const ruleEngine = require('./ruleEngine');
 
-const COMPANY_PROFILES = {
-  Google: {
-    targetSkills: ['algorithms', 'data structures', 'system design', 'c++', 'java', 'python', 'go', 'machine learning'],
-    targetMinYears: 2,
-    targetMinCgpa: 8.5,
-    weights: { skills: 0.35, projects: 0.25, experience: 0.15, education: 0.15, resumeQuality: 0.05, certifications: 0.05 }
-  },
-  Amazon: {
-    targetSkills: ['data structures', 'algorithms', 'system design', 'java', 'c++', 'python', 'aws', 'cloud'],
-    targetMinYears: 1.5,
-    targetMinCgpa: 8.0,
-    weights: { skills: 0.35, projects: 0.20, experience: 0.20, education: 0.10, resumeQuality: 0.10, certifications: 0.05 }
-  },
-  Microsoft: {
-    targetSkills: ['algorithms', 'data structures', 'c#', 'c++', 'java', 'azure', 'system design', 'software engineering'],
-    targetMinYears: 1.5,
-    targetMinCgpa: 8.0,
-    weights: { skills: 0.35, projects: 0.20, experience: 0.20, education: 0.10, resumeQuality: 0.10, certifications: 0.05 }
-  },
-  Meta: {
-    targetSkills: ['algorithms', 'systems programming', 'javascript', 'react', 'python', 'c++', 'distributed systems', 'system design'],
-    targetMinYears: 2,
-    targetMinCgpa: 8.0,
-    weights: { skills: 0.35, projects: 0.25, experience: 0.20, education: 0.10, resumeQuality: 0.05, certifications: 0.05 }
-  },
-  Adobe: {
-    targetSkills: ['java', 'c++', 'javascript', 'data structures', 'algorithms', 'object oriented design', 'react', 'node.js'],
-    targetMinYears: 1,
-    targetMinCgpa: 8.0,
-    weights: { skills: 0.30, projects: 0.25, experience: 0.15, education: 0.15, resumeQuality: 0.10, certifications: 0.05 }
-  },
-  Oracle: {
-    targetSkills: ['java', 'sql', 'database design', 'algorithms', 'c++', 'pl/sql', 'cloud computing', 'linux'],
-    targetMinYears: 1,
-    targetMinCgpa: 7.5,
-    weights: { skills: 0.30, projects: 0.20, experience: 0.15, education: 0.15, resumeQuality: 0.10, certifications: 0.10 }
-  },
-  Salesforce: {
-    targetSkills: ['java', 'javascript', 'apex', 'salesforce', 'cloud computing', 'apis', 'web services', 'sql'],
-    targetMinYears: 1.5,
-    targetMinCgpa: 7.5,
-    weights: { skills: 0.35, projects: 0.20, experience: 0.15, education: 0.10, resumeQuality: 0.10, certifications: 0.10 }
-  },
-  TCS: {
-    targetSkills: ['java', 'python', 'c', 'c++', 'sql', 'html', 'css', 'javascript'],
-    targetMinYears: 0,
-    targetMinCgpa: 6.0,
-    weights: { skills: 0.20, projects: 0.15, experience: 0.05, education: 0.20, resumeQuality: 0.20, certifications: 0.20 }
-  },
-  Infosys: {
-    targetSkills: ['java', 'python', 'net', 'sql', 'cloud basics', 'software engineering', 'html', 'css'],
-    targetMinYears: 0,
-    targetMinCgpa: 6.0,
-    weights: { skills: 0.20, projects: 0.15, experience: 0.05, education: 0.20, resumeQuality: 0.20, certifications: 0.20 }
-  },
-  Accenture: {
-    targetSkills: ['software engineering', 'java', 'sql', 'cloud computing', 'agile', 'project management', 'business analysis'],
-    targetMinYears: 0,
-    targetMinCgpa: 6.5,
-    weights: { skills: 0.25, projects: 0.15, experience: 0.10, education: 0.15, resumeQuality: 0.15, certifications: 0.20 }
-  },
-  Capgemini: {
-    targetSkills: ['java', 'net', 'sql', 'javascript', 'html', 'css', 'cloud', 'angular'],
-    targetMinYears: 0,
-    targetMinCgpa: 6.0,
-    weights: { skills: 0.25, projects: 0.15, experience: 0.05, education: 0.15, resumeQuality: 0.20, certifications: 0.20 }
-  },
-  Cognizant: {
-    targetSkills: ['java', 'python', 'sql', 'javascript', 'html', 'css', 'cloud', 'testing', 'c#'],
-    targetMinYears: 0,
-    targetMinCgpa: 6.0,
-    weights: { skills: 0.25, projects: 0.15, experience: 0.05, education: 0.15, resumeQuality: 0.20, certifications: 0.20 }
-  },
-  Deloitte: {
-    targetSkills: ['consulting', 'sql', 'python', 'agile', 'data analytics', 'cloud', 'tableau', 'power bi'],
-    targetMinYears: 0,
-    targetMinCgpa: 6.5,
-    weights: { skills: 0.25, projects: 0.15, experience: 0.10, education: 0.15, resumeQuality: 0.15, certifications: 0.20 }
-  },
-  Wipro: {
-    targetSkills: ['java', 'python', 'sql', 'html', 'css', 'javascript', 'testing', 'c#'],
-    targetMinYears: 0,
-    targetMinCgpa: 6.0,
-    weights: { skills: 0.20, projects: 0.15, experience: 0.05, education: 0.20, resumeQuality: 0.20, certifications: 0.20 }
-  },
-  "Tech Mahindra": {
-    targetSkills: ['telecom', 'java', 'python', 'sql', 'networking', 'cloud', 'linux', 'testing'],
-    targetMinYears: 0,
-    targetMinCgpa: 6.0,
-    weights: { skills: 0.20, projects: 0.15, experience: 0.05, education: 0.20, resumeQuality: 0.20, certifications: 0.20 }
-  }
-};
+const PROFILES_DIR = path.join(__dirname, '..', '..', 'data', 'companyProfiles');
 
 /**
- * Calculates readiness for all 15 listed companies.
+ * Calculates readiness details dynamically based on JSON company profiles.
  */
 exports.calculateCompanyReadiness = (parsedData, userProfile) => {
   const readinessResults = [];
-
-  // Determine scoring confidence
+  
   let confidence = 'High';
   if (!parsedData || Object.keys(parsedData).length === 0) {
     confidence = 'Low';
@@ -107,54 +17,120 @@ exports.calculateCompanyReadiness = (parsedData, userProfile) => {
     confidence = 'Medium';
   }
 
-  for (const [companyName, criteria] of Object.entries(COMPANY_PROFILES)) {
-    const analysis = ruleEngine.evaluateResume(parsedData, userProfile, criteria);
-    const score = analysis.overallScore;
-
-    // Map readiness level
-    let readinessLevel = 'Low';
-    if (score >= 90) readinessLevel = 'Ready';
-    else if (score >= 75) readinessLevel = 'High';
-    else if (score >= 50) readinessLevel = 'Medium';
-
-    // Compile reasons (positive features and improvement targets)
-    const reasons = [];
-
-    // Skills feedback
-    if (analysis.factors.skills.score >= 80) {
-      reasons.push('Matches core technical skills required for this role.');
-    } else if (analysis.factors.skills.score < 50) {
-      reasons.push('Needs to acquire key technologies required by this organization.');
-    }
-
-    // Projects feedback
-    if (analysis.factors.projects.score >= 80) {
-      reasons.push('Demonstrates solid project portfolio demonstrating practical software applications.');
-    } else {
-      reasons.push('Recommend adding more robust projects matching standard engineering templates.');
-    }
-
-    // Experience / Education feedback
-    if (analysis.factors.experience.score >= 80) {
-      reasons.push('Demonstrates relevant industry experience or internships.');
-    }
-    if (analysis.factors.education.score < 70) {
-      reasons.push('Academic credentials or CGPA stand below preferred targets.');
-    }
-
-    // Default catch-all reasons to ensure user has guidance
-    if (reasons.length === 0) {
-      reasons.push('Meets standard technical criteria. Keep practicing and refining projects.');
-    }
-
-    readinessResults.push({
-      companyName,
-      readinessPercent: score,
-      readinessLevel,
-      confidence,
-      reasons: reasons.slice(0, 3)
-    });
+  let files = [];
+  try {
+    files = fs.readdirSync(PROFILES_DIR).filter(f => f.endsWith('.json'));
+  } catch (err) {
+    console.error('[Company Readiness] Failed to read company profiles directory:', err);
   }
+
+  // Compile candidate skills
+  const resumeSkills = parsedData?.skills || [];
+  const profileSkills = [
+    ...(userProfile?.programmingLanguages || []),
+    ...(userProfile?.frameworks || []),
+    ...(userProfile?.databases || []),
+    ...(userProfile?.tools || [])
+  ];
+  const candidateSkills = Array.from(new Set([
+    ...resumeSkills.map(s => s.trim()),
+    ...profileSkills.map(s => s.trim())
+  ])).map(s => s.toLowerCase());
+
+  files.forEach(file => {
+    try {
+      const filePath = path.join(PROFILES_DIR, file);
+      const profile = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+
+      // Map profile config parameters to criteria weights
+      const isProduct = profile.minimumCGPA >= 7.5;
+      const criteria = {
+        targetSkills: [...profile.requiredSkills, ...profile.preferredSkills],
+        targetMinYears: profile.experienceLevel === 'Experienced' ? 2 : 0,
+        targetMinCgpa: profile.minimumCGPA,
+        weights: isProduct 
+          ? { skills: 0.35, projects: 0.25, experience: 0.15, education: 0.15, resumeQuality: 0.05, certifications: 0.05 }
+          : { skills: 0.20, projects: 0.15, experience: 0.05, education: 0.20, resumeQuality: 0.20, certifications: 0.20 }
+      };
+
+      const analysis = ruleEngine.evaluateResume(parsedData, userProfile, criteria);
+      const score = analysis.overallScore;
+
+      let readinessLevel = 'Low';
+      if (score >= 90) readinessLevel = 'Ready';
+      else if (score >= 75) readinessLevel = 'High';
+      else if (score >= 50) readinessLevel = 'Medium';
+
+      // Identify Strengths vs Gaps
+      const strengths = [];
+      const missing = [];
+
+      profile.requiredSkills.forEach(skill => {
+        const norm = ruleEngine.normalize(skill);
+        const isMatched = candidateSkills.some(c => c === norm || c.includes(norm) || norm.includes(c));
+        if (isMatched) {
+          strengths.push(skill);
+        } else {
+          missing.push(skill);
+        }
+      });
+
+      profile.preferredSkills.forEach(skill => {
+        const norm = ruleEngine.normalize(skill);
+        const isMatched = candidateSkills.some(c => c === norm || c.includes(norm) || norm.includes(c));
+        if (isMatched && strengths.length < 5) {
+          strengths.push(skill);
+        } else if (!isMatched && missing.length < 5) {
+          missing.push(skill);
+        }
+      });
+
+      // Projects remaining check
+      const projectsListed = parsedData?.projects?.length || 0;
+      const projectsRequiredCount = Math.max(profile.requiredProjects - projectsListed, 0);
+      const projectsRequired = projectsRequiredCount > 0 
+        ? `${projectsRequiredCount} more production project${projectsRequiredCount > 1 ? 's' : ''}`
+        : 'Project portfolio meets criteria';
+
+      // Prep duration estimate
+      let prepMonths = 0;
+      if (score < 50) prepMonths = 6;
+      else if (score < 75) prepMonths = 3;
+      else if (score < 90) prepMonths = 1;
+      const estimatedPrepTime = prepMonths > 0 ? `${prepMonths} Month${prepMonths > 1 ? 's' : ''}` : 'Ready';
+
+      // Compose reasons
+      const reasons = [];
+      if (analysis.factors.skills.score >= 80) {
+        reasons.push('Matches core technical skills required for this role.');
+      } else if (analysis.factors.skills.score < 50) {
+        reasons.push('Needs to acquire key technologies required by this organization.');
+      }
+      if (projectsRequiredCount > 0) {
+        reasons.push(`Recommend adding ${projectsRequiredCount} more projects.`);
+      }
+      if (analysis.factors.education.score < 70) {
+        reasons.push('Academic credentials or CGPA stand below preferred targets.');
+      }
+      if (reasons.length === 0) {
+        reasons.push('Meets standard technical criteria. Keep practicing and refining projects.');
+      }
+
+      readinessResults.push({
+        companyName: profile.company,
+        readinessPercent: score,
+        readinessLevel,
+        confidence,
+        reasons: reasons.slice(0, 3),
+        strengths: strengths.slice(0, 4),
+        missing: missing.slice(0, 4),
+        projectsRequired,
+        estimatedPrepTime
+      });
+    } catch (err) {
+      console.error(`[Company Readiness] Failed to evaluate profile file: ${file}`, err);
+    }
+  });
 
   return readinessResults;
 };

@@ -7,7 +7,11 @@ const companyReadinessSchema = new mongoose.Schema({
   confidence: { type: String, enum: ['Low', 'Medium', 'High'], required: true },
   reasons: { type: [String], default: [] },
   explanation: { type: String, default: '' },
-  improvementSuggestions: { type: [String], default: [] }
+  improvementSuggestions: { type: [String], default: [] },
+  strengths: { type: [String], default: [] },
+  missing: { type: [String], default: [] },
+  projectsRequired: { type: String, default: '' },
+  estimatedPrepTime: { type: String, default: '' }
 });
 
 const companyRecommendationsSchema = new mongoose.Schema({
@@ -82,7 +86,8 @@ const salaryPredictionSchema = new mongoose.Schema({
   expectedSalaryMin: { type: Number, default: 0 },
   expectedSalaryMax: { type: Number, default: 0 },
   currency: { type: String, default: 'INR' },
-  explanation: { type: String, default: '' }
+  explanation: { type: String, default: '' },
+  factors: { type: mongoose.Schema.Types.Mixed, default: {} }
 });
 
 const timelineSchema = new mongoose.Schema({
@@ -91,6 +96,15 @@ const timelineSchema = new mongoose.Schema({
   nineMonths: { type: String, default: '' },
   twelveMonths: { type: String, default: '' },
   studyHoursPerWeek: { type: Number, default: 15 }
+});
+
+const richResourceSchema = new mongoose.Schema({
+  subject: { type: String, required: true },
+  primary: { type: String, default: '' },
+  practice: { type: String, default: '' },
+  reference: { type: String, default: '' },
+  videos: { type: String, default: '' },
+  estimatedTime: { type: String, default: '' }
 });
 
 const careerSchema = new mongoose.Schema({
@@ -102,6 +116,7 @@ const careerSchema = new mongoose.Schema({
   skillGaps: { type: [skillGapSchema], default: [] },
   roadmap: { type: roadmapSchema, default: () => ({}) },
   resources: { type: [resourceSchema], default: [] },
+  richResources: { type: [richResourceSchema], default: [] },
   projects: { type: [projectRecommendationSchema], default: [] },
   certifications: { type: [certificationRecommendationSchema], default: [] },
   salaryPrediction: { type: salaryPredictionSchema, default: () => ({}) },

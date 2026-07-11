@@ -1,0 +1,27 @@
+{
+  "company": "Microsoft",
+  "role": "Software Engineer",
+  "minimumCGPA": 8,
+  "requiredSkills": [
+    "DSA",
+    "C#",
+    "C++",
+    "Java",
+    "Data Structures",
+    "Algorithms",
+    "System Design",
+    "Git",
+    "Azure"
+  ],
+  "preferredSkills": [
+    "Docker",
+    "Kubernetes",
+    "TypeScript",
+    "SQL"
+  ],
+  "requiredProjects": 3,
+  "preferredCertifications": [
+    "Microsoft Certified: Azure Solutions Architect Expert"
+  ],
+  "experienceLevel": "Fresher"
+}

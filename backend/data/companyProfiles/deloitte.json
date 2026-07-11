@@ -1,0 +1,23 @@
+{
+  "company": "Deloitte",
+  "role": "Technology Consultant",
+  "minimumCGPA": 6.5,
+  "requiredSkills": [
+    "Consulting",
+    "SQL",
+    "Python",
+    "Agile",
+    "Data Analytics",
+    "Git"
+  ],
+  "preferredSkills": [
+    "Tableau",
+    "Power BI",
+    "AWS"
+  ],
+  "requiredProjects": 1.5,
+  "preferredCertifications": [
+    "AWS Certified Cloud Practitioner"
+  ],
+  "experienceLevel": "Fresher"
+}

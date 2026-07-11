@@ -1,0 +1,25 @@
+{
+  "company": "Adobe",
+  "role": "Software Engineer",
+  "minimumCGPA": 8,
+  "requiredSkills": [
+    "DSA",
+    "Java",
+    "C++",
+    "JavaScript",
+    "React",
+    "Node.js",
+    "Data Structures",
+    "Algorithms",
+    "System Design",
+    "Git"
+  ],
+  "preferredSkills": [
+    "Docker",
+    "AWS",
+    "NoSQL"
+  ],
+  "requiredProjects": 2,
+  "preferredCertifications": [],
+  "experienceLevel": "Fresher"
+}

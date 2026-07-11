@@ -167,6 +167,7 @@ export default function CareerPage() {
     skillGaps = [],
     roadmap = { weeklyGoals: [], monthlyGoals: [], estimatedCompletionTime: '' },
     resources = [],
+    richResources = [],
     projects = [],
     certifications = [],
     salaryPrediction = { currentSalaryMin: 0, currentSalaryMax: 0, expectedSalaryMin: 0, expectedSalaryMax: 0, currency: 'LPA (INR)', explanation: '' },
@@ -344,6 +345,57 @@ export default function CareerPage() {
                 </div>
               </div>
 
+              {/* Resume Evolution & Progress Summary */}
+              {historyData && historyData.previousCareerScore > 0 && (
+                <div className="glass-panel p-6 rounded-2xl border-brand-border/40 space-y-4 bg-gradient-to-br from-brand-primary/5 via-white/0 to-white/0">
+                  <div>
+                    <h3 className="text-xs font-extrabold text-white flex items-center gap-2">
+                      <TrendingUp className="w-4 h-4 text-brand-primary animate-pulse" />
+                      Resume Evolution Tracker
+                    </h3>
+                    <p className="text-[10px] text-slate-400">Compare your progress across uploaded resume iterations.</p>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-4 text-center">
+                    <div className="p-3 bg-white/2 border border-brand-border/40 rounded-xl space-y-1">
+                      <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">Career Score</span>
+                      <div className="flex items-center justify-center gap-1.5 flex-wrap">
+                        <span className="text-xs text-slate-400 font-bold">{historyData.previousCareerScore}%</span>
+                        <ArrowRight className="w-3 h-3 text-slate-500" />
+                        <span className="text-sm text-white font-black">{historyData.currentCareerScore}%</span>
+                      </div>
+                      <span className={`text-[9px] font-black block ${historyData.improvementPercent >= 0 ? 'text-brand-primary' : 'text-rose-400'}`}>
+                        {historyData.improvementPercent >= 0 ? `+${historyData.improvementPercent}%` : `${historyData.improvementPercent}%`} Improvement
+                      </span>
+                    </div>
+
+                    <div className="p-3 bg-white/2 border border-brand-border/40 rounded-xl space-y-1">
+                      <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">Skills Inventory</span>
+                      <div className="flex items-center justify-center gap-1.5 flex-wrap">
+                        <span className="text-xs text-slate-400 font-bold">Previous</span>
+                        <ArrowRight className="w-3 h-3 text-slate-500" />
+                        <span className="text-sm text-white font-black">+{historyData.skillGrowth}</span>
+                      </div>
+                      <span className="text-[9px] text-brand-secondary font-black block">
+                        Expanded Skills
+                      </span>
+                    </div>
+
+                    <div className="p-3 bg-white/2 border border-brand-border/40 rounded-xl space-y-1">
+                      <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">Company Matches</span>
+                      <div className="flex items-center justify-center gap-1.5 flex-wrap">
+                        <span className="text-xs text-slate-400 font-bold">Previous</span>
+                        <ArrowRight className="w-3 h-3 text-slate-500" />
+                        <span className="text-sm text-white font-black">+{historyData.readinessGrowth}</span>
+                      </div>
+                      <span className="text-[9px] text-brand-accent font-black block">
+                        Eligible Firms
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Company Readiness Filtered list */}
               <div className="glass-panel p-6 rounded-2xl border-brand-border/40 space-y-6">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-brand-border/40 pb-4 gap-4">
@@ -412,11 +464,56 @@ export default function CareerPage() {
                                 initial={{ height: 0, opacity: 0 }}
                                 animate={{ height: 'auto', opacity: 1 }}
                                 exit={{ height: 0, opacity: 0 }}
-                                className="overflow-hidden mt-3 space-y-3 pt-2 border-t border-brand-border/20"
+                                className="overflow-hidden mt-3 space-y-4 pt-2 border-t border-brand-border/20"
                               >
-                                <p className="text-[10px] text-slate-300 leading-relaxed">{c.explanation}</p>
-                                <div className="space-y-1.5">
-                                  <span className="text-[9px] text-brand-secondary font-bold uppercase tracking-wider block">Recommended Improvements:</span>
+                                <p className="text-[10px] text-slate-300 leading-relaxed font-semibold">{c.explanation}</p>
+                                
+                                <div className="grid grid-cols-2 gap-3 pt-1">
+                                  {/* Strengths */}
+                                  <div className="space-y-1.5 p-2 rounded bg-white/2 border border-brand-border/30">
+                                    <span className="text-[8px] font-extrabold uppercase tracking-wide text-brand-primary block">✓ Strengths</span>
+                                    {c.strengths && c.strengths.length > 0 ? (
+                                      <div className="flex flex-wrap gap-1">
+                                        {c.strengths.map(s => (
+                                          <span key={s} className="px-1.5 py-0.5 rounded bg-brand-primary/10 border border-brand-primary/20 text-[8px] text-brand-primary font-semibold">{s}</span>
+                                        ))}
+                                      </div>
+                                    ) : (
+                                      <span className="text-[9px] text-slate-500 block italic">None identified</span>
+                                    )}
+                                  </div>
+
+                                  {/* Gaps / Missing */}
+                                  <div className="space-y-1.5 p-2 rounded bg-white/2 border border-brand-border/30">
+                                    <span className="text-[8px] font-extrabold uppercase tracking-wide text-rose-400 block">✗ Gaps</span>
+                                    {c.missing && c.missing.length > 0 ? (
+                                      <div className="flex flex-wrap gap-1">
+                                        {c.missing.map(m => (
+                                          <span key={m} className="px-1.5 py-0.5 rounded bg-rose-400/10 border border-rose-400/20 text-[8px] text-rose-400 font-semibold">{m}</span>
+                                        ))}
+                                      </div>
+                                    ) : (
+                                      <span className="text-[9px] text-brand-primary block italic">No gaps!</span>
+                                    )}
+                                  </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3">
+                                  {/* Projects Required */}
+                                  <div className="p-2.5 rounded bg-white/2 border border-brand-border/30 text-[9px]">
+                                    <span className="text-[8px] text-slate-500 block uppercase font-bold tracking-wider">Projects Check</span>
+                                    <span className="text-white font-extrabold block mt-0.5">{c.projectsRequired || 'None'}</span>
+                                  </div>
+
+                                  {/* Prep Time */}
+                                  <div className="p-2.5 rounded bg-white/2 border border-brand-border/30 text-[9px]">
+                                    <span className="text-[8px] text-slate-500 block uppercase font-bold tracking-wider">Prep Time</span>
+                                    <span className="text-brand-secondary font-extrabold block mt-0.5">{c.estimatedPrepTime || 'Ready'}</span>
+                                  </div>
+                                </div>
+
+                                <div className="space-y-1.5 pt-1">
+                                  <span className="text-[8px] text-brand-secondary font-bold uppercase tracking-wider block">Recommended Improvements:</span>
                                   <ul className="space-y-1">
                                     {c.improvementSuggestions.map((suggestion, sIdx) => (
                                       <li key={sIdx} className="text-[9px] text-slate-400 flex items-start gap-1">
@@ -456,6 +553,32 @@ export default function CareerPage() {
                 <p className="text-[10px] text-slate-400 leading-relaxed">
                   {salaryPrediction.explanation}
                 </p>
+
+                {/* Predictor Transparency Factors */}
+                <div className="grid grid-cols-2 gap-2 bg-brand-dark/50 p-3 rounded-xl border border-brand-border/60 text-[9px] relative overflow-hidden">
+                  <div className="flex justify-between items-center pr-2 border-r border-brand-border/30 font-medium">
+                    <span className="text-slate-500 font-bold uppercase tracking-wider">Experience</span>
+                    <span className="text-slate-200 font-semibold">{salaryPrediction.factors?.experience || 'Fresher'}</span>
+                  </div>
+                  <div className="flex justify-between items-center pl-2 font-medium">
+                    <span className="text-slate-500 font-bold uppercase tracking-wider">Projects</span>
+                    <span className="text-slate-200 font-semibold">{salaryPrediction.factors?.projects || 0}</span>
+                  </div>
+                  <div className="flex justify-between items-center pr-2 border-r border-brand-border/30 pt-1 font-medium">
+                    <span className="text-slate-500 font-bold uppercase tracking-wider">Career Score</span>
+                    <span className="text-slate-200 font-semibold">{salaryPrediction.factors?.careerScore || 0}%</span>
+                  </div>
+                  <div className="flex justify-between items-center pl-2 pt-1 font-medium">
+                    <span className="text-slate-500 font-bold uppercase tracking-wider">Confidence</span>
+                    <span className={`font-semibold ${salaryPrediction.factors?.confidence === 'High' ? 'text-emerald-400' : salaryPrediction.factors?.confidence === 'Medium' ? 'text-brand-secondary' : 'text-slate-400'}`}>
+                      {salaryPrediction.factors?.confidence || 'Medium'}
+                    </span>
+                  </div>
+                  <div className="col-span-2 border-t border-brand-border/30 mt-1 pt-1 flex justify-between items-center text-[8px] font-medium">
+                    <span className="text-slate-500 font-bold uppercase tracking-wider">Parameters</span>
+                    <span className="text-slate-400">Location: {salaryPrediction.factors?.location || 'India'} | Role: {salaryPrediction.factors?.targetCompany || 'Software Engineer'}</span>
+                  </div>
+                </div>
 
                 <div className="h-44 w-full pt-2">
                   <ResponsiveContainer width="100%" height="100%">
@@ -791,6 +914,53 @@ export default function CareerPage() {
                 ))}
               </div>
             </div>
+
+            {/* Rich Learning Tracks */}
+            {richResources && richResources.length > 0 && (
+              <div className="glass-panel p-6 rounded-2xl border-brand-border/40 space-y-6">
+                <div>
+                  <h3 className="text-sm font-extrabold text-white flex items-center gap-2">
+                    <Sparkles className="w-4.5 h-4.5 text-brand-primary" />
+                    Structured Learning Tracks
+                  </h3>
+                  <p className="text-xs text-slate-400">Curated, structured curricula to systematically target your remaining technical gaps.</p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {richResources.map((track, idx) => (
+                    <div key={idx} className="p-5 rounded-xl bg-brand-card/45 border border-brand-border hover:border-brand-primary/40 transition-colors flex flex-col justify-between">
+                      <div className="space-y-4">
+                        <div className="flex justify-between items-center flex-wrap gap-2">
+                          <h4 className="text-xs font-black text-white">{track.subject}</h4>
+                          <span className="text-[9px] font-extrabold bg-brand-primary/10 border border-brand-primary/20 text-brand-primary px-2.5 py-0.5 rounded">
+                            {track.estimatedTime}
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-2 pt-2 border-t border-brand-border/30">
+                          <div className="text-[10px] flex justify-between gap-4 font-medium">
+                            <span className="text-slate-500 font-bold uppercase tracking-wider text-[8px]">Primary Course</span>
+                            <span className="text-slate-200 text-right">{track.primary || 'N/A'}</span>
+                          </div>
+                          <div className="text-[10px] flex justify-between gap-4 font-medium">
+                            <span className="text-slate-500 font-bold uppercase tracking-wider text-[8px]">Practice</span>
+                            <span className="text-slate-200 text-right">{track.practice || 'N/A'}</span>
+                          </div>
+                          <div className="text-[10px] flex justify-between gap-4 font-medium">
+                            <span className="text-slate-500 font-bold uppercase tracking-wider text-[8px]">Reference Book</span>
+                            <span className="text-slate-200 text-right">{track.reference || 'N/A'}</span>
+                          </div>
+                          <div className="text-[10px] flex justify-between gap-4 font-medium">
+                            <span className="text-slate-500 font-bold uppercase tracking-wider text-[8px]">Videos</span>
+                            <span className="text-slate-200 text-right">{track.videos || 'N/A'}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Recommended Certifications & Learning Resources */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

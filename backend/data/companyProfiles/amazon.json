@@ -1,0 +1,27 @@
+{
+  "company": "Amazon",
+  "role": "Software Development Engineer",
+  "minimumCGPA": 8,
+  "requiredSkills": [
+    "DSA",
+    "Java",
+    "C++",
+    "Python",
+    "Data Structures",
+    "Algorithms",
+    "System Design",
+    "Git",
+    "AWS"
+  ],
+  "preferredSkills": [
+    "Docker",
+    "Kubernetes",
+    "NoSQL",
+    "Redis"
+  ],
+  "requiredProjects": 3,
+  "preferredCertifications": [
+    "AWS Certified Solutions Architect"
+  ],
+  "experienceLevel": "Fresher"
+}

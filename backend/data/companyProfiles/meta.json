@@ -1,0 +1,25 @@
+{
+  "company": "Meta",
+  "role": "Software Engineer",
+  "minimumCGPA": 8,
+  "requiredSkills": [
+    "DSA",
+    "JavaScript",
+    "React",
+    "Python",
+    "C++",
+    "Data Structures",
+    "Algorithms",
+    "System Design",
+    "Git"
+  ],
+  "preferredSkills": [
+    "Docker",
+    "Kubernetes",
+    "Rust",
+    "Go"
+  ],
+  "requiredProjects": 3,
+  "preferredCertifications": [],
+  "experienceLevel": "Fresher"
+}
