@@ -13,77 +13,77 @@ import ProfilePage from './pages/ProfilePage';
 import EditProfilePage from './pages/EditProfilePage';
 import DashboardPage from './pages/DashboardPage';
 import ResumePage from './pages/ResumePage';
-import { 
-  Sparkles, 
-  ShieldCheck, 
-  Cpu, 
-  ChevronRight, 
-  GraduationCap, 
-  BarChart3, 
-  FileText, 
-  Video, 
-  Code, 
-  BookOpen, 
-  Building, 
-  TrendingUp 
+import {
+  Sparkles,
+  ShieldCheck,
+  Cpu,
+  ChevronRight,
+  GraduationCap,
+  BarChart3,
+  FileText,
+  Video,
+  Code,
+  BookOpen,
+  Building,
+  TrendingUp
 } from 'lucide-react';
 
 const MODULES = [
-  { 
-    id: 'dashboard', 
-    name: 'Dashboard', 
-    icon: BarChart3, 
+  {
+    id: 'dashboard',
+    name: 'Dashboard',
+    icon: BarChart3,
     path: '/',
-    phase: 'Phase 1 (Active)', 
-    description: 'Central console displaying interview readiness, average score metrics, and conceptual strengths.' 
+    phase: 'Phase 1 (Active)',
+    description: 'Central console displaying interview readiness, average score metrics, and conceptual strengths.'
   },
-  { 
-    id: 'resume', 
-    name: 'Resume Analyzer', 
-    icon: FileText, 
+  {
+    id: 'resume',
+    name: 'Resume Analyzer',
+    icon: FileText,
     path: '/resume-analyzer',
-    phase: 'Phase 3 (Upcoming)', 
-    description: 'ATS resume score parsing and semantic suggestions powered by Google Gemini AI.' 
+    phase: 'Phase 3 (Upcoming)',
+    description: 'ATS resume score parsing and semantic suggestions powered by Google Gemini AI.'
   },
-  { 
-    id: 'interviews', 
-    name: 'Mock Interviews', 
-    icon: Video, 
+  {
+    id: 'interviews',
+    name: 'Mock Interviews',
+    icon: Video,
     path: '/mock-interviews',
-    phase: 'Phase 4 (Upcoming)', 
-    description: 'Automated interactive placements simulation with real-time video/text feedback and AI assessment.' 
+    phase: 'Phase 4 (Upcoming)',
+    description: 'Automated interactive placements simulation with real-time video/text feedback and AI assessment.'
   },
-  { 
-    id: 'coding', 
-    name: 'Coding practice', 
-    icon: Code, 
+  {
+    id: 'coding',
+    name: 'Coding practice',
+    icon: Code,
     path: '/coding-practice',
-    phase: 'Phase 4 (Upcoming)', 
-    description: 'Algorithm practices in an interactive code compiler sandboxed runtime environment.' 
+    phase: 'Phase 4 (Upcoming)',
+    description: 'Algorithm practices in an interactive code compiler sandboxed runtime environment.'
   },
-  { 
-    id: 'mcqs', 
-    name: 'MCQ placement practice', 
-    icon: BookOpen, 
+  {
+    id: 'mcqs',
+    name: 'MCQ placement practice',
+    icon: BookOpen,
     path: '/mcq-practice',
-    phase: 'Phase 4 (Upcoming)', 
-    description: 'Conceptual placements multiple-choice questionnaire assessments with instantaneous reviews.' 
+    phase: 'Phase 4 (Upcoming)',
+    description: 'Conceptual placements multiple-choice questionnaire assessments with instantaneous reviews.'
   },
-  { 
-    id: 'company', 
-    name: 'Company-wise Prep', 
-    icon: Building, 
+  {
+    id: 'company',
+    name: 'Company-wise Prep',
+    icon: Building,
     path: '/company-prep',
-    phase: 'Phase 4 (Upcoming)', 
-    description: 'Targeted preparation tracks configured for leading tech firms (Google, Microsoft, Amazon, etc.).' 
+    phase: 'Phase 4 (Upcoming)',
+    description: 'Targeted preparation tracks configured for leading tech firms (Google, Microsoft, Amazon, etc.).'
   },
-  { 
-    id: 'analytics', 
-    name: 'System Analytics', 
-    icon: TrendingUp, 
+  {
+    id: 'analytics',
+    name: 'System Analytics',
+    icon: TrendingUp,
     path: '/analytics',
-    phase: 'Phase 5 (Upcoming)', 
-    description: 'Advanced student performance analytics, tracking skill levels and weaknesses.' 
+    phase: 'Phase 5 (Upcoming)',
+    description: 'Advanced student performance analytics, tracking skill levels and weaknesses.'
   }
 ];
 
@@ -130,7 +130,7 @@ function DashboardHome() {
           {MODULES.map((mod) => {
             const Icon = mod.icon;
             return (
-              <Link 
+              <Link
                 key={mod.id}
                 to={mod.path}
                 className="glass-panel glass-panel-hover rounded-2xl p-6 flex flex-col justify-between cursor-pointer group"
@@ -140,11 +140,10 @@ function DashboardHome() {
                     <div className="p-3 rounded-xl bg-brand-primary/10 border border-brand-primary/10 text-brand-primary group-hover:bg-brand-primary group-hover:text-white transition-all duration-300">
                       <Icon className="w-6 h-6" />
                     </div>
-                    <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${
-                      mod.id === 'dashboard' 
-                        ? 'bg-brand-success/10 border border-brand-success/20 text-brand-success' 
+                    <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${mod.id === 'dashboard'
+                        ? 'bg-brand-success/10 border border-brand-success/20 text-brand-success'
                         : 'bg-brand-warning/10 border border-brand-warning/20 text-brand-warning'
-                    }`}>
+                      }`}>
                       {mod.phase}
                     </span>
                   </div>
@@ -203,8 +202,8 @@ function PlaceholderModule({ title, desc }) {
           </div>
 
           <div className="flex items-center gap-3">
-            <Link 
-              to="/" 
+            <Link
+              to="/"
               className="px-5 py-2.5 bg-white/5 border border-brand-border hover:border-brand-primary/50 hover:bg-brand-primary/10 rounded-xl text-xs font-semibold text-white transition-all"
             >
               Return to Dashboard
@@ -222,32 +221,32 @@ export default function App() {
       <AuthProvider>
         <BrowserRouter>
           <Routes>
-            <Route 
-              path="/login" 
+            <Route
+              path="/login"
               element={
                 <PublicRoute>
                   <LoginPage />
                 </PublicRoute>
-              } 
+              }
             />
-            <Route 
-              path="/register" 
+            <Route
+              path="/register"
               element={
                 <PublicRoute>
                   <RegisterPage />
                 </PublicRoute>
-              } 
+              }
             />
-            <Route 
-              path="/onboarding" 
+            <Route
+              path="/onboarding"
               element={
                 <ProtectedRoute allowIncompleteProfile={true}>
                   <OnboardingPage />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="/*" 
+            <Route
+              path="/*"
               element={
                 <ProtectedRoute>
                   <ProtectedLayout />

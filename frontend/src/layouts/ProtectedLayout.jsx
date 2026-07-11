@@ -2,16 +2,16 @@ import React, { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
-import { 
-  FileText, 
-  Video, 
-  Code, 
-  BookOpen, 
-  BarChart3, 
-  GraduationCap, 
-  Menu, 
-  X, 
-  Bell, 
+import {
+  FileText,
+  Video,
+  Code,
+  BookOpen,
+  BarChart3,
+  GraduationCap,
+  Menu,
+  X,
+  Bell,
   ChevronRight,
   LogOut,
   Building,
@@ -19,46 +19,46 @@ import {
 } from 'lucide-react';
 
 const MODULES = [
-  { 
-    id: 'dashboard', 
-    name: 'Dashboard', 
-    icon: BarChart3, 
+  {
+    id: 'dashboard',
+    name: 'Dashboard',
+    icon: BarChart3,
     path: '/'
   },
-  { 
-    id: 'resume', 
-    name: 'Resume Analyzer', 
-    icon: FileText, 
+  {
+    id: 'resume',
+    name: 'Resume Analyzer',
+    icon: FileText,
     path: '/resume-analyzer'
   },
-  { 
-    id: 'interviews', 
-    name: 'Mock Interviews', 
-    icon: Video, 
+  {
+    id: 'interviews',
+    name: 'Mock Interviews',
+    icon: Video,
     path: '/mock-interviews'
   },
-  { 
-    id: 'coding', 
-    name: 'Coding practice', 
-    icon: Code, 
+  {
+    id: 'coding',
+    name: 'Coding practice',
+    icon: Code,
     path: '/coding-practice'
   },
-  { 
-    id: 'mcqs', 
-    name: 'MCQ placement practice', 
-    icon: BookOpen, 
+  {
+    id: 'mcqs',
+    name: 'MCQ placement practice',
+    icon: BookOpen,
     path: '/mcq-practice'
   },
-  { 
-    id: 'company', 
-    name: 'Company-wise Prep', 
-    icon: Building, 
+  {
+    id: 'company',
+    name: 'Company-wise Prep',
+    icon: Building,
     path: '/company-prep'
   },
-  { 
-    id: 'analytics', 
-    name: 'System Analytics', 
-    icon: TrendingUp, 
+  {
+    id: 'analytics',
+    name: 'System Analytics',
+    icon: TrendingUp,
     path: '/analytics'
   }
 ];
@@ -73,7 +73,7 @@ export default function ProtectedLayout() {
 
   return (
     <div className="min-h-screen flex bg-brand-dark font-sans text-slate-100 overflow-x-hidden w-full">
-      
+
       {/* Sidebar - Desktop */}
       <aside className="hidden lg:flex flex-col w-68 border-r border-brand-border/60 bg-brand-card/30 backdrop-blur-xl shrink-0">
         <div className="flex items-center gap-3.5 px-6 h-22 border-b border-brand-border/50">
@@ -94,18 +94,17 @@ export default function ProtectedLayout() {
               <button
                 key={item.id}
                 onClick={() => navigate(item.path)}
-                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 group relative border cursor-pointer ${
-                  isActive 
-                    ? 'bg-brand-primary/10 text-white border-brand-primary/30' 
+                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 group relative border cursor-pointer ${isActive
+                    ? 'bg-brand-primary/10 text-white border-brand-primary/30'
                     : 'text-slate-400 hover:text-slate-200 hover:bg-white/5 border-transparent'
-                }`}
+                  }`}
               >
                 <div className="flex items-center gap-3">
                   <Icon className={`w-5 h-5 transition-transform duration-200 group-hover:scale-110 ${isActive ? 'text-brand-primary' : 'text-slate-400'}`} />
                   <span className="font-semibold text-sm">{item.name}</span>
                 </div>
                 {isActive && (
-                  <motion.div 
+                  <motion.div
                     layoutId="activeIndicator"
                     className="w-1.5 h-1.5 rounded-full bg-brand-primary"
                     transition={{ type: 'spring', stiffness: 380, damping: 30 }}
@@ -128,7 +127,7 @@ export default function ProtectedLayout() {
                 <p className="text-[10px] text-slate-400 truncate">{user?.email || 'student@prepai.com'}</p>
               </div>
             </div>
-            <button 
+            <button
               onClick={logout}
               className="p-1.5 text-slate-400 hover:text-brand-error hover:bg-brand-error/10 rounded-lg transition-colors cursor-pointer"
               title="Logout"
@@ -143,14 +142,14 @@ export default function ProtectedLayout() {
       <AnimatePresence>
         {mobileMenuOpen && (
           <>
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 0.6 }}
               exit={{ opacity: 0 }}
               onClick={() => setMobileMenuOpen(false)}
               className="fixed inset-0 bg-black z-40 lg:hidden"
             />
-            <motion.aside 
+            <motion.aside
               initial={{ x: '-100%' }}
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
@@ -164,7 +163,7 @@ export default function ProtectedLayout() {
                   </div>
                   <span className="font-bold text-xl text-white">PrepAI</span>
                 </div>
-                <button 
+                <button
                   onClick={() => setMobileMenuOpen(false)}
                   className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-white/5"
                 >
@@ -183,11 +182,10 @@ export default function ProtectedLayout() {
                         navigate(item.path);
                         setMobileMenuOpen(false);
                       }}
-                      className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all border cursor-pointer ${
-                        isActive 
-                          ? 'bg-brand-primary/15 text-white border-brand-primary/30' 
+                      className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all border cursor-pointer ${isActive
+                          ? 'bg-brand-primary/15 text-white border-brand-primary/30'
                           : 'text-slate-400 hover:text-slate-200 hover:bg-white/5 border-transparent'
-                      }`}
+                        }`}
                     >
                       <div className="flex items-center gap-3">
                         <Icon className={`w-5 h-5 ${isActive ? 'text-brand-primary' : 'text-slate-400'}`} />
@@ -214,10 +212,10 @@ export default function ProtectedLayout() {
 
       {/* Main Body */}
       <div className="flex-1 flex flex-col min-w-0 min-h-screen">
-        
+
         {/* Navigation Bar */}
         <header className="h-22 border-b border-brand-border/60 px-6 flex items-center justify-between bg-brand-card/10 backdrop-blur-md sticky top-0 z-30">
-          <button 
+          <button
             onClick={() => setMobileMenuOpen(true)}
             className="p-2 lg:hidden text-slate-400 hover:text-white rounded-lg hover:bg-white/5"
           >
@@ -259,7 +257,7 @@ export default function ProtectedLayout() {
           <span className="hidden sm:inline">Path: <code>C:\Users\abilash\.gemini\antigravity-ide\scratch\prepai</code></span>
         </footer>
       </div>
-      
+
     </div>
   );
 }
