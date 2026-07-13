@@ -55,6 +55,19 @@ exports.analyzeResume = async (req, res, next) => {
     jd.aiAnalysisStatus = 'Analyzing';
     await jd.save();
 
+    user.resumeMetadata.analysisStatus = 'Analyzing';
+    if (user.resumeMetadata.processingSteps && user.resumeMetadata.processingSteps.length > 0) {
+      user.resumeMetadata.processingSteps = user.resumeMetadata.processingSteps.map(step => {
+        if (step.step === 'Running AI Analysis') {
+          step.status = 'In Progress';
+          step.startedAt = new Date();
+        }
+        return step;
+      });
+      user.markModified('resumeMetadata.processingSteps');
+    }
+    await user.save({ validateBeforeSave: false });
+
     // 5. Build Prompt
     const prompt = buildResumeAnalysisPrompt(user.resumeMetadata.parsedData, user, jd.jobDescriptionText);
 
@@ -94,18 +107,36 @@ exports.analyzeResume = async (req, res, next) => {
     user.resumeMetadata.aiAnalysisData = analysisData;
     user.resumeMetadata.lastAnalyzed = new Date();
 
-    // Accumulate extracted skills
-    const currentSkills = user.resumeMetadata.skillsExtracted || [];
-    const newSkills = [
-      ...(analysisData.missingSkills || []),
-      ...(analysisData.recommendedTechnologies || [])
-    ];
-    user.resumeMetadata.skillsExtracted = [...new Set([...currentSkills, ...newSkills])];
+    user.resumeMetadata.analysisSummary = analysisData.resumeSummary || '';
+    user.resumeMetadata.analysisStatus = 'Analyzed';
+    user.resumeMetadata.analysisDuration = responseTime;
 
-    // Placeholder for atsScore (next phase)
-    user.resumeMetadata.atsScore = null;
+    // Mark Running AI Analysis and Saving Results step as Completed
+    if (user.resumeMetadata.processingSteps && user.resumeMetadata.processingSteps.length > 0) {
+      user.resumeMetadata.processingSteps = user.resumeMetadata.processingSteps.map(step => {
+        if (step.step === 'Running AI Analysis') {
+          step.status = 'Completed';
+          step.completedAt = new Date();
+          if (step.startedAt) {
+            step.duration = step.completedAt.getTime() - step.startedAt.getTime();
+          }
+        }
+        if (step.step === 'Saving Results') {
+          step.status = 'Completed';
+          step.startedAt = new Date();
+          step.completedAt = new Date();
+          step.duration = 10;
+        }
+        return step;
+      });
+      user.markModified('resumeMetadata.processingSteps');
+      user.markModified('resumeMetadata');
+    }
+
     await user.save({ validateBeforeSave: false });
 
+    console.log("PARSED BEFORE SAVE:");
+    console.log(user.resumeMetadata.parsedData);
     res.status(200).json({
       success: true,
       message: 'Resume analyzed successfully by Gemini AI.',
@@ -126,6 +157,22 @@ exports.analyzeResume = async (req, res, next) => {
         jd.aiAnalysisStatus = 'Failed';
         await jd.save();
       }
+
+      user.resumeMetadata.analysisStatus = 'Failed';
+      if (user.resumeMetadata.processingSteps && user.resumeMetadata.processingSteps.length > 0) {
+        user.resumeMetadata.processingSteps = user.resumeMetadata.processingSteps.map(step => {
+          if (step.status === 'In Progress' || step.status === 'Pending') {
+            step.status = 'Failed';
+            step.completedAt = new Date();
+            if (step.startedAt) {
+              step.duration = step.completedAt.getTime() - step.startedAt.getTime();
+            }
+          }
+          return step;
+        });
+        user.markModified('resumeMetadata.processingSteps');
+      }
+      await user.save({ validateBeforeSave: false });
     } catch (dbErr) {
       console.error('Failed to set JobDescription status to Failed:', dbErr);
     }

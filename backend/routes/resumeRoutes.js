@@ -21,6 +21,7 @@ router.route('/')
 router.post('/parse', resumeController.parseResume);
 router.get('/parsed', resumeController.getParsedData);
 router.get('/status', resumeController.getParsingStatus);
+router.get('/compare', resumeController.compareResumes);
 
 // AI Resume Analysis Endpoints
 router.post('/analyze', aiController.analyzeResume);

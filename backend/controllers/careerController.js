@@ -22,6 +22,10 @@ exports.analyzeCareer = async (req, res, next) => {
     if (career) {
       // Overwrite current profile results
       career.careerScore = analysisResults.careerScore;
+      career.overallCareerScore = analysisResults.overallCareerScore;
+      career.targetCompanyReadiness = analysisResults.targetCompanyReadiness;
+      career.companyRank = analysisResults.companyRank;
+      career.careerScoreFactors = analysisResults.careerScoreFactors;
       career.resumeHash = analysisResults.resumeHash;
       career.companyReadiness = analysisResults.companyReadiness;
       career.companyRecommendations = analysisResults.companyRecommendations;
@@ -54,6 +58,10 @@ exports.analyzeCareer = async (req, res, next) => {
       career = await Career.create({
         user: user._id,
         careerScore: analysisResults.careerScore,
+        overallCareerScore: analysisResults.overallCareerScore,
+        targetCompanyReadiness: analysisResults.targetCompanyReadiness,
+        companyRank: analysisResults.companyRank,
+        careerScoreFactors: analysisResults.careerScoreFactors,
         resumeHash: analysisResults.resumeHash,
         companyReadiness: analysisResults.companyReadiness,
         companyRecommendations: analysisResults.companyRecommendations,
@@ -74,7 +82,17 @@ exports.analyzeCareer = async (req, res, next) => {
       success: true,
       message: 'Career analysis completed successfully.',
       data: {
-        career
+        career,
+        overallCareerScore: career.overallCareerScore,
+        targetCompanyReadiness: career.targetCompanyReadiness,
+        companyRank: career.companyRank || 0,
+        careerScoreBreakdown: career.careerScoreFactors || {},
+        careerGoal: {
+          company: user.targetCompany || '',
+          role: user.targetRole || '',
+          timeline: user.targetTimeline || ''
+        },
+        careerTimeline: career.timeline || {}
       }
     });
   } catch (err) {
@@ -92,6 +110,10 @@ const getOrInitializeCareer = async (user) => {
     career = await Career.create({
       user: user._id,
       careerScore: initial.careerScore,
+      overallCareerScore: initial.overallCareerScore,
+      targetCompanyReadiness: initial.targetCompanyReadiness,
+      companyRank: initial.companyRank,
+      careerScoreFactors: initial.careerScoreFactors,
       resumeHash: initial.resumeHash,
       companyReadiness: initial.companyReadiness,
       companyRecommendations: initial.companyRecommendations,
@@ -121,7 +143,17 @@ exports.getCareerData = async (req, res, next) => {
       success: true,
       message: 'Career details retrieved successfully.',
       data: {
-        career
+        career,
+        overallCareerScore: career.overallCareerScore,
+        targetCompanyReadiness: career.targetCompanyReadiness,
+        companyRank: career.companyRank || 0,
+        careerScoreBreakdown: career.careerScoreFactors || {},
+        careerGoal: {
+          company: req.user.targetCompany || '',
+          role: req.user.targetRole || '',
+          timeline: req.user.targetTimeline || ''
+        },
+        careerTimeline: career.timeline || {}
       }
     });
   } catch (err) {

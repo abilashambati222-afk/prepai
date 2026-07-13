@@ -1,4 +1,4 @@
-const CareerHistory = require('../../models/CareerHistory');
+const CareerSnapshot = require('../../models/CareerSnapshot');
 
 /**
  * Saves a career analysis checkpoint in MongoDB, including detailed skills/projects inventory.
@@ -7,11 +7,11 @@ exports.saveSnapshot = async (userId, careerScore, skillsCount, readyCompaniesCo
   try {
     // Avoid duplicate snapshots for identical hashes in same session
     if (resumeHash && resumeHash !== 'manual_profile') {
-      const existing = await CareerHistory.findOne({ user: userId, resumeHash });
+      const existing = await CareerSnapshot.findOne({ user: userId, resumeHash });
       if (existing) return existing;
     }
     
-    return await CareerHistory.create({
+    return await CareerSnapshot.create({
       user: userId,
       careerScore,
       skillsCount,
@@ -33,7 +33,7 @@ exports.saveSnapshot = async (userId, careerScore, skillsCount, readyCompaniesCo
  */
 exports.getProgressComparison = async (userId) => {
   try {
-    const history = await CareerHistory.find({ user: userId }).sort({ analyzedAt: 1 });
+    const history = await CareerSnapshot.find({ user: userId }).sort({ analyzedAt: 1 });
     
     if (history.length === 0) {
       return {

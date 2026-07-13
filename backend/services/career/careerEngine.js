@@ -56,10 +56,26 @@ exports.analyzeCareerProfile = async (user, jobDescriptionId = null) => {
     weights: { skills: 0.30, projects: 0.20, experience: 0.15, education: 0.15, resumeQuality: 0.10, certifications: 0.10 }
   };
   const careerEvaluation = evaluateResume(parsedData, user, generalCriteria);
-  const careerScore = careerEvaluation.overallScore;
-
+  const overallCareerScore = careerEvaluation.overallScore;
+  
   // Calculate Company Readiness (15 companies)
   const companyReadinessRaw = calculateCompanyReadiness(parsedData, user);
+
+  // Calculate target company readiness and company rank
+  let targetCompanyReadiness = 0;
+  let companyRank = 0;
+  if (user.targetCompany) {
+    const matchedComp = companyReadinessRaw.find(
+      c => c.companyName.toLowerCase() === user.targetCompany.toLowerCase().trim()
+    );
+    if (matchedComp) {
+      targetCompanyReadiness = matchedComp.readinessPercent;
+      companyRank = matchedComp.rank || 0;
+    }
+  }
+
+  // Sync careerScore for backward compatibility
+  const careerScore = user.targetCompany ? targetCompanyReadiness : overallCareerScore;
 
   // Group companies into Ready, Almost Ready, and Need Improvement
   const ready = [];
@@ -111,16 +127,21 @@ exports.analyzeCareerProfile = async (user, jobDescriptionId = null) => {
   const prompt = `
   You are an expert AI Career Mentor for developers.
   Given the candidate profile and rule-based calculations, generate a personalized learning roadmap, resource list, project ideas, salary predict rationale, and company readiness details in JSON.
+  Heavily personalize the learning roadmap, resource recommendations, project recommendations, and interview preparation to prepare the candidate specifically for their combined target company (${user.targetCompany || 'Google'}), target role (${user.targetRole || 'Software Engineer'}), and target timeline (${user.targetTimeline || '2028'}).
+  For example, if the target company is Google and the role is Backend Engineer, focus on a Backend Roadmap, Google-style system design questions, and advanced data structures and algorithms topics. If the target company is Amazon and the role is SDE-I, focus on Amazon Leadership Principles, SDE roadmaps, and object-oriented design.
 
   CANDIDATE PROFILE:
   - Name: ${user.fullName}
   - College: ${user.college || 'N/A'}, Degree: ${user.degree || 'N/A'}, CGPA: ${user.cgpa || 'N/A'}
   - Experience Level: ${user.experienceLevel}
   - Target Role: ${user.targetRole || 'Software Engineer'}
+  - Target Company: ${user.targetCompany || 'Google'}
+  - Target Timeline: ${user.targetTimeline || '2028'}
   - Current Skills: ${JSON.stringify(candidateSkills)}
 
   RULE ENGINE CALCULATIONS:
-  - Overall Career Score: ${careerScore}/100
+  - Overall Career Score: ${overallCareerScore}/100
+  - Target Company Readiness Score: ${targetCompanyReadiness}/100
   - Ready Companies: ${JSON.stringify(ready)}
   - Almost Ready: ${JSON.stringify(almostReady)}
   - Need Improvement: ${JSON.stringify(needImprovement)}
@@ -150,7 +171,7 @@ exports.analyzeCareerProfile = async (user, jobDescriptionId = null) => {
     "companyRecommendationsExplanation": "Why the candidate stands ready or falls short across these groups.",
     "roadmap": {
       "weeklyGoals": [
-        { "week": 1, "goal": "Goal name", "topics": ["Topic A", "Topic B"], "milestone": "Weekly checkpoint", "practiceTasks": ["e.g. 20 LeetCode Questions", "Finish Striver Sheet Section"], "expectedProgress": 12 }
+        { "week": 1, "goal": "Arrays", "topics": ["Strings"], "milestone": "Weekly checkpoint", "practiceTasks": ["20 LeetCode", "Finish Striver Sheet"], "expectedProgress": 12 }
       ],
       "monthlyGoals": [
         { "month": 1, "goal": "Goal name", "milestones": ["M1", "M2"] }
@@ -268,8 +289,22 @@ exports.analyzeCareerProfile = async (user, jobDescriptionId = null) => {
     ready
   );
 
+  let careerScoreFactors = careerEvaluation.factors;
+  if (user.targetCompany) {
+    const matchedComp = companyReadiness.find(
+      c => c.companyName.toLowerCase() === user.targetCompany.toLowerCase().trim()
+    );
+    if (matchedComp && matchedComp.factors) {
+      careerScoreFactors = matchedComp.factors;
+    }
+  }
+
   return {
     careerScore,
+    overallCareerScore,
+    targetCompanyReadiness,
+    companyRank,
+    careerScoreFactors,
     companyReadiness,
     companyRecommendations,
     recommendedRoles,

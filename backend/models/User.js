@@ -92,6 +92,16 @@ const userSchema = new mongoose.Schema(
       trim: true,
       default: ''
     },
+    targetCompany: {
+      type: String,
+      trim: true,
+      default: ''
+    },
+    targetTimeline: {
+      type: String,
+      trim: true,
+      default: ''
+    },
     experienceLevel: {
       type: String,
       enum: {
@@ -209,8 +219,104 @@ const userSchema = new mongoose.Schema(
         analysisVersion: { type: String, default: '1.0.0' }
       },
       atsScore: { type: Number, default: null },
+      keywordScore: { type: Number, default: null },
+      formattingScore: { type: Number, default: null },
+      sectionScores: { type: mongoose.Schema.Types.Mixed, default: {} },
       lastAnalyzed: { type: Date, default: null },
-      skillsExtracted: { type: [String], default: [] }
+      skillsExtracted: { type: [String], default: [] },
+      analysisSummary: { type: String, default: '' },
+      analysisStatus: {
+        type: String,
+        enum: ['Idle', 'Analyzing', 'Analyzed', 'Failed'],
+        default: 'Idle'
+      },
+      analysisDuration: { type: Number, default: 0 },
+      resumeHealth: {
+        type: String,
+        enum: ['Excellent', 'Good', 'Average', 'Needs Improvement', 'Poor'],
+        default: 'Average'
+      },
+      resumeQuality: { type: Number, default: 0 },
+      atsChecklist: { type: mongoose.Schema.Types.Mixed, default: {} },
+      processingSteps: {
+        type: [
+          {
+            step: { type: String, required: true },
+            status: { type: String, enum: ['Pending', 'In Progress', 'Completed', 'Failed'], default: 'Pending' },
+            startedAt: { type: Date, default: null },
+            completedAt: { type: Date, default: null },
+            duration: { type: Number, default: 0 }
+          }
+        ],
+        default: []
+      },
+      lastComparisonVersion: { type: Number, default: null }
+    },
+    resumeVersions: {
+      type: [
+        {
+          version: Number,
+          uploadedAt: Date,
+          atsScore: Number,
+          fileHash: String,
+          summary: String,
+          storagePath: String,
+          analysisSnapshot: mongoose.Schema.Types.Mixed
+        }
+      ],
+      default: []
+    },
+    interviewHistory: {
+      type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Interview' }],
+      default: []
+    },
+    mockInterviews: {
+      type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Interview' }],
+      default: []
+    },
+    interviewReports: {
+      type: [mongoose.Schema.Types.Mixed],
+      default: []
+    },
+    technicalScores: {
+      type: [Number],
+      default: []
+    },
+    hrScores: {
+      type: [Number],
+      default: []
+    },
+    communicationScores: {
+      type: [Number],
+      default: []
+    },
+    behaviorScores: {
+      type: [Number],
+      default: []
+    },
+    codingScores: {
+      type: [Number],
+      default: []
+    },
+    companyScores: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {}
+    },
+    overallInterviewScore: {
+      type: Number,
+      default: 0
+    },
+    interviewReadiness: {
+      type: Number,
+      default: 0
+    },
+    interviewCertificates: {
+      type: [mongoose.Schema.Types.Mixed],
+      default: []
+    },
+    interviewAnalytics: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {}
     }
   },
   {

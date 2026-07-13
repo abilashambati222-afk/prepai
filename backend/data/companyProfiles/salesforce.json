@@ -29,5 +29,9 @@
   "systemDesignRequired": true,
   "dsaLevel": "Medium",
   "communicationWeight": 8,
-  "leadershipWeight": 4
+  "leadershipWeight": 4,
+  "cloudWeight": 10,
+  "backendWeight": 15,
+  "frontendWeight": 5,
+  "resumeWeight": 10
 }

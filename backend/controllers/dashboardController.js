@@ -50,6 +50,9 @@ const calculateCompletion = (user) => {
 exports.getDashboardData = async (req, res, next) => {
   try {
     const user = req.user;
+    const Career = require('../models/Career');
+    const career = await Career.findOne({ user: user._id });
+    const careerScore = career ? career.careerScore : 0;
     
     // 1. Calculate profile completion ratio
     const completionPercent = calculateCompletion(user);
@@ -80,11 +83,17 @@ exports.getDashboardData = async (req, res, next) => {
           email: user.email,
           role: user.role,
           targetRole: user.targetRole,
+          targetCompany: user.targetCompany || '',
+          targetTimeline: user.targetTimeline || '',
           experienceLevel: user.experienceLevel,
           preferredCompanies: user.preferredCompanies || [],
           notificationsEnabled: user.notificationsEnabled,
           preferredDifficulty: user.preferredDifficulty
         },
+        careerScore: careerScore,
+        overallCareerScore: career ? career.overallCareerScore : 0,
+        targetCompanyReadiness: career ? career.targetCompanyReadiness : 0,
+        careerScoreFactors: career ? career.careerScoreFactors : null,
         profileCompletion: completionPercent,
         resumeStatus: {
           uploaded: !!(user.resumeMetadata && user.resumeMetadata.storedFileName),
@@ -98,9 +107,20 @@ exports.getDashboardData = async (req, res, next) => {
           lastParsed: user.resumeMetadata?.parsingLogs?.completedAt || user.resumeMetadata?.uploadedAt || null
         },
         streak: activeStreak,
+        interviewReadiness: user.interviewReadiness || 0,
+        completedInterviews: user.interviewHistory ? user.interviewHistory.length : 0,
+        averageScore: user.overallInterviewScore || 0,
+        bestCompanyScore: user.companyScores && Object.keys(user.companyScores).length > 0 ? Math.max(...Object.values(user.companyScores).map(Number)) : 0,
+        technicalScore: user.interviewAnalytics?.technicalScore || 0,
+        hrScore: user.interviewAnalytics?.hrScore || 0,
+        communication: user.interviewAnalytics?.communicationScore || 0,
+        confidence: user.interviewAnalytics?.confidenceScore || 0,
+        coding: user.interviewAnalytics?.codingScore || 0,
+        weakTopics: user.interviewAnalytics?.weakAreas || [],
+        strongTopics: user.interviewAnalytics?.strongAreas || [],
         todaysGoal: {
           target: user.dailyGoal || 5,
-          completed: 0 // Mock completed targets
+          completed: user.interviewHistory ? user.interviewHistory.length : 0
         },
         quickStats: {
           skillsCount,
@@ -111,10 +131,10 @@ exports.getDashboardData = async (req, res, next) => {
         quickActions: [
           { id: 'profile', name: 'Complete Profile', action: '/profile/edit', available: true },
           { id: 'resume', name: 'Upload Resume', action: '/resume-analyzer', available: true },
-          { id: 'interview', name: 'Start Mock Interview', action: '/mock-interviews', available: false }, // Upcoming
+          { id: 'interview', name: 'Start Mock Interview', action: '/mock-interviews', available: true },
           { id: 'coding', name: 'Practice Coding', action: '/coding-practice', available: false }, // Upcoming
           { id: 'mcq', name: 'Solve MCQs', action: '/mcq-practice', available: false }, // Upcoming
-          { id: 'analytics', name: 'View Analytics', action: '/analytics', available: false } // Upcoming
+          { id: 'analytics', name: 'View Analytics', action: '/analytics', available: true }
         ]
       }
     });

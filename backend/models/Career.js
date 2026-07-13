@@ -12,7 +12,8 @@ const companyReadinessSchema = new mongoose.Schema({
   missing: { type: [String], default: [] },
   projectsRequired: { type: String, default: '' },
   estimatedPrepTime: { type: String, default: '' },
-  rank: { type: Number, default: 15 }
+  rank: { type: Number, default: 15 },
+  factors: { type: mongoose.Schema.Types.Mixed, default: {} }
 });
 
 const companyRecommendationsSchema = new mongoose.Schema({
@@ -113,6 +114,10 @@ const richResourceSchema = new mongoose.Schema({
 const careerSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
   careerScore: { type: Number, default: 0 },
+  overallCareerScore: { type: Number, default: 0 },
+  targetCompanyReadiness: { type: Number, default: 0 },
+  companyRank: { type: Number, default: 0 },
+  careerScoreFactors: { type: mongoose.Schema.Types.Mixed, default: {} },
   companyReadiness: { type: [companyReadinessSchema], default: [] },
   companyRecommendations: { type: companyRecommendationsSchema, default: () => ({}) },
   recommendedRoles: { type: [recommendedRoleSchema], default: [] },

@@ -86,6 +86,8 @@ exports.updateProfile = async (req, res, next) => {
       'graduationYear',
       'cgpa',
       'targetRole',
+      'targetCompany',
+      'targetTimeline',
       'experienceLevel',
       'preferredCompanies',
       'programmingLanguages',

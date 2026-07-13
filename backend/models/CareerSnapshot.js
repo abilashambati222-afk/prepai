@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const careerHistorySchema = new mongoose.Schema({
+const careerSnapshotSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
   careerScore: { type: Number, required: true },
   skillsCount: { type: Number, required: true },
@@ -14,4 +14,4 @@ const careerHistorySchema = new mongoose.Schema({
   timestamps: true
 });
 
-module.exports = mongoose.model('CareerHistory', careerHistorySchema);
+module.exports = mongoose.model('CareerSnapshot', careerSnapshotSchema);

@@ -11,14 +11,20 @@ if (!fs.existsSync(uploadDir)) {
 // Storage Configuration
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, uploadDir);
+    const userId = req.user ? req.user._id.toString() : 'anonymous';
+    const userDir = path.join(uploadDir, 'resumes', userId);
+    
+    // Create directory recursively if it doesn't exist
+    if (!fs.existsSync(userDir)) {
+      fs.mkdirSync(userDir, { recursive: true });
+    }
+    cb(null, userDir);
   },
   filename: (req, file, cb) => {
-    // Naming pattern: resume-<userId>-<timestamp>.pdf
-    const userId = req.user ? req.user._id : 'anonymous';
+    // Naming pattern: temp-<timestamp>.pdf (renamed later in controller)
     const timestamp = Date.now();
     const ext = path.extname(file.originalname).toLowerCase();
-    cb(null, `resume-${userId}-${timestamp}${ext}`);
+    cb(null, `temp-${timestamp}${ext}`);
   }
 });
 
@@ -40,7 +46,7 @@ const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
   limits: {
-    fileSize: 5 * 1024 * 1024 // 5 MB max file limit
+    fileSize: 10 * 1024 * 1024 // 10 MB max file limit
   }
 });
 

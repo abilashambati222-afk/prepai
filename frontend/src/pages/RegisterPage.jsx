@@ -57,7 +57,7 @@ export default function RegisterPage() {
           </div>
           <div>
             <h1 className="text-2xl font-extrabold text-white tracking-tight">
-              Create your account on <span className="text-gradient">PrepAI</span>
+              Create your account on <span className="text-gradient-animate">PrepAI</span>
             </h1>
             <p className="text-xs text-slate-400 mt-1 font-medium">Practice Smarter. Interview Better.</p>
           </div>
@@ -102,7 +102,7 @@ export default function RegisterPage() {
                     message: 'Full name cannot exceed 100 characters'
                   }
                 })}
-                className="w-full bg-[#0d1222]/80 border border-brand-border/80 focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 rounded-xl py-3 pl-11 pr-4 text-sm text-white placeholder-slate-500 outline-none transition-all"
+                className="w-full bg-[#0d1222]/80 border border-brand-border/80 focus-ring rounded-xl py-3 pl-11 pr-4 text-sm text-white placeholder-slate-500 outline-none transition-all"
               />
             </div>
           </div>
@@ -124,7 +124,7 @@ export default function RegisterPage() {
                     message: 'Please enter a valid email address'
                   }
                 })}
-                className="w-full bg-[#0d1222]/80 border border-brand-border/80 focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 rounded-xl py-3 pl-11 pr-4 text-sm text-white placeholder-slate-500 outline-none transition-all"
+                className="w-full bg-[#0d1222]/80 border border-brand-border/80 focus-ring rounded-xl py-3 pl-11 pr-4 text-sm text-white placeholder-slate-500 outline-none transition-all"
               />
             </div>
           </div>
@@ -146,7 +146,7 @@ export default function RegisterPage() {
                     message: 'Password must be at least 6 characters long'
                   }
                 })}
-                className="w-full bg-[#0d1222]/80 border border-brand-border/80 focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 rounded-xl py-3 pl-11 pr-11 text-sm text-white placeholder-slate-500 outline-none transition-all"
+                className="w-full bg-[#0d1222]/80 border border-brand-border/80 focus-ring rounded-xl py-3 pl-11 pr-11 text-sm text-white placeholder-slate-500 outline-none transition-all"
               />
               <button
                 type="button"
@@ -172,7 +172,7 @@ export default function RegisterPage() {
                   required: 'Please confirm your password',
                   validate: (value) => value === passwordVal || 'Passwords do not match'
                 })}
-                className="w-full bg-[#0d1222]/80 border border-brand-border/80 focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 rounded-xl py-3 pl-11 pr-4 text-sm text-white placeholder-slate-500 outline-none transition-all"
+                className="w-full bg-[#0d1222]/80 border border-brand-border/80 focus-ring rounded-xl py-3 pl-11 pr-4 text-sm text-white placeholder-slate-500 outline-none transition-all"
               />
             </div>
           </div>

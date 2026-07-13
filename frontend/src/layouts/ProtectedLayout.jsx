@@ -69,7 +69,10 @@ export default function ProtectedLayout() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const currentTab = MODULES.find(t => t.path === location.pathname) || MODULES[0];
+  const currentTab = MODULES.find(t => 
+    location.pathname === t.path || 
+    (t.path !== '/' && location.pathname.startsWith(t.path))
+  ) || MODULES[0];
 
   return (
     <div className="min-h-screen flex bg-brand-dark font-sans text-slate-100 overflow-x-hidden w-full">
@@ -81,7 +84,7 @@ export default function ProtectedLayout() {
             <GraduationCap className="w-6.5 h-6.5 text-brand-primary" />
           </div>
           <div>
-            <span className="font-extrabold text-xl tracking-tight text-white">Prep<span className="text-brand-primary">AI</span></span>
+            <span className="font-extrabold text-xl tracking-tight text-white">Prep<span className="text-gradient-animate font-black">AI</span></span>
             <p className="text-[10px] text-slate-400 font-semibold tracking-wider uppercase">Portal Console</p>
           </div>
         </div>
@@ -89,7 +92,8 @@ export default function ProtectedLayout() {
         <nav className="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
           {MODULES.map((item) => {
             const Icon = item.icon;
-            const isActive = location.pathname === item.path;
+            const isActive = location.pathname === item.path || 
+              (item.path !== '/' && location.pathname.startsWith(item.path));
             return (
               <button
                 key={item.id}
@@ -161,7 +165,7 @@ export default function ProtectedLayout() {
                   <div className="p-2.5 bg-brand-primary/10 rounded-xl border border-brand-primary/20 text-brand-primary">
                     <GraduationCap className="w-6 h-6" />
                   </div>
-                  <span className="font-bold text-xl text-white">PrepAI</span>
+                  <span className="font-extrabold text-xl tracking-tight text-white">Prep<span className="text-gradient-animate font-black">AI</span></span>
                 </div>
                 <button
                   onClick={() => setMobileMenuOpen(false)}
@@ -174,7 +178,8 @@ export default function ProtectedLayout() {
               <nav className="px-4 py-6 space-y-1.5 overflow-y-auto flex-1">
                 {MODULES.map((item) => {
                   const Icon = item.icon;
-                  const isActive = location.pathname === item.path;
+                  const isActive = location.pathname === item.path ||
+                    (item.path !== '/' && location.pathname.startsWith(item.path));
                   return (
                     <button
                       key={item.id}

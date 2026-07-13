@@ -69,6 +69,8 @@ export default function OnboardingPage() {
       graduationYear: user?.graduationYear || '',
       cgpa: user?.cgpa || '',
       targetRole: user?.targetRole || '',
+      targetCompany: user?.targetCompany || '',
+      targetTimeline: user?.targetTimeline || '',
       experienceLevel: user?.experienceLevel || 'Student',
       github: user?.github || '',
       linkedin: user?.linkedin || '',
@@ -158,7 +160,7 @@ export default function OnboardingPage() {
       {/* Onboarding Header */}
       <div className="text-center mb-8 max-w-md relative z-10">
         <h1 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight">
-          Let's personalize <span className="text-gradient">PrepAI</span>
+          Let's personalize <span className="text-gradient-animate">PrepAI</span>
         </h1>
         <p className="text-xs text-slate-400 mt-2 font-medium">
           Tell us about your background, career targets, and skills to tailor your placement roadmap.
@@ -222,7 +224,7 @@ export default function OnboardingPage() {
                     <input 
                       type="text"
                       {...register('fullName', { required: 'Full name is required.' })}
-                      className="w-full bg-[#0d1222]/80 border border-brand-border focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 rounded-xl py-2.5 px-4 text-xs text-white placeholder-slate-500 outline-none transition-all"
+                      className="w-full bg-[#0d1222]/80 border border-brand-border focus-ring rounded-xl py-2.5 px-4 text-xs text-white placeholder-slate-500 outline-none transition-all"
                     />
                     {errors.fullName && <p className="text-[10px] text-brand-error mt-0.5">{errors.fullName.message}</p>}
                   </div>
@@ -238,7 +240,7 @@ export default function OnboardingPage() {
                           message: 'Please enter a valid phone number (10-15 digits).'
                         }
                       })}
-                      className="w-full bg-[#0d1222]/80 border border-brand-border focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 rounded-xl py-2.5 px-4 text-xs text-white placeholder-slate-500 outline-none transition-all"
+                      className="w-full bg-[#0d1222]/80 border border-brand-border focus-ring rounded-xl py-2.5 px-4 text-xs text-white placeholder-slate-500 outline-none transition-all"
                     />
                     {errors.phone && <p className="text-[10px] text-brand-error mt-0.5">{errors.phone.message}</p>}
                   </div>
@@ -251,7 +253,7 @@ export default function OnboardingPage() {
                       type="text"
                       placeholder="Indian Institute of Technology"
                       {...register('college', { required: 'College is required.' })}
-                      className="w-full bg-[#0d1222]/80 border border-brand-border focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 rounded-xl py-2.5 px-4 text-xs text-white placeholder-slate-500 outline-none transition-all"
+                      className="w-full bg-[#0d1222]/80 border border-brand-border focus-ring rounded-xl py-2.5 px-4 text-xs text-white placeholder-slate-500 outline-none transition-all"
                     />
                     {errors.college && <p className="text-[10px] text-brand-error mt-0.5">{errors.college.message}</p>}
                   </div>
@@ -262,7 +264,7 @@ export default function OnboardingPage() {
                       type="text"
                       placeholder="B.Tech / B.E / MCA"
                       {...register('degree', { required: 'Degree is required.' })}
-                      className="w-full bg-[#0d1222]/80 border border-brand-border focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 rounded-xl py-2.5 px-4 text-xs text-white placeholder-slate-500 outline-none transition-all"
+                      className="w-full bg-[#0d1222]/80 border border-brand-border focus-ring rounded-xl py-2.5 px-4 text-xs text-white placeholder-slate-500 outline-none transition-all"
                     />
                     {errors.degree && <p className="text-[10px] text-brand-error mt-0.5">{errors.degree.message}</p>}
                   </div>
@@ -275,7 +277,7 @@ export default function OnboardingPage() {
                       type="text"
                       placeholder="Computer Science"
                       {...register('branch', { required: 'Branch is required.' })}
-                      className="w-full bg-[#0d1222]/80 border border-brand-border focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 rounded-xl py-2.5 px-4 text-xs text-white placeholder-slate-500 outline-none transition-all"
+                      className="w-full bg-[#0d1222]/80 border border-brand-border focus-ring rounded-xl py-2.5 px-4 text-xs text-white placeholder-slate-500 outline-none transition-all"
                     />
                     {errors.branch && <p className="text-[10px] text-brand-error mt-0.5">{errors.branch.message}</p>}
                   </div>
@@ -290,7 +292,7 @@ export default function OnboardingPage() {
                         min: { value: 1980, message: 'Invalid year (1980-2040).' },
                         max: { value: 2040, message: 'Invalid year (1980-2040).' }
                       })}
-                      className="w-full bg-[#0d1222]/80 border border-brand-border focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 rounded-xl py-2.5 px-4 text-xs text-white placeholder-slate-500 outline-none transition-all"
+                      className="w-full bg-[#0d1222]/80 border border-brand-border focus-ring rounded-xl py-2.5 px-4 text-xs text-white placeholder-slate-500 outline-none transition-all"
                     />
                     {errors.graduationYear && <p className="text-[10px] text-brand-error mt-0.5">{errors.graduationYear.message}</p>}
                   </div>
@@ -303,7 +305,7 @@ export default function OnboardingPage() {
                       {...register('cgpa', {
                         validate: val => !val || (Number(val) >= 0 && Number(val) <= 10) || 'CGPA must be between 0.0 and 10.0'
                       })}
-                      className="w-full bg-[#0d1222]/80 border border-brand-border focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 rounded-xl py-2.5 px-4 text-xs text-white placeholder-slate-500 outline-none transition-all"
+                      className="w-full bg-[#0d1222]/80 border border-brand-border focus-ring rounded-xl py-2.5 px-4 text-xs text-white placeholder-slate-500 outline-none transition-all"
                     />
                     {errors.cgpa && <p className="text-[10px] text-brand-error mt-0.5">{errors.cgpa.message}</p>}
                   </div>
@@ -323,7 +325,7 @@ export default function OnboardingPage() {
                       type="text"
                       placeholder="Software Development Engineer (SDE)"
                       {...register('targetRole', { required: 'Target role is required.' })}
-                      className="w-full bg-[#0d1222]/80 border border-brand-border focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 rounded-xl py-2.5 px-4 text-xs text-white placeholder-slate-500 outline-none transition-all"
+                      className="w-full bg-[#0d1222]/80 border border-brand-border focus-ring rounded-xl py-2.5 px-4 text-xs text-white placeholder-slate-500 outline-none transition-all"
                     />
                     {errors.targetRole && <p className="text-[10px] text-brand-error mt-0.5">{errors.targetRole.message}</p>}
                   </div>
@@ -332,11 +334,51 @@ export default function OnboardingPage() {
                     <label className="text-xs font-semibold text-slate-300">Experience Level</label>
                     <select
                       {...register('experienceLevel')}
-                      className="w-full bg-[#0d1222]/80 border border-brand-border focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 rounded-xl py-2.5 px-4 text-xs text-white outline-none transition-all"
+                      className="w-full bg-[#0d1222]/80 border border-brand-border focus-ring rounded-xl py-2.5 px-4 text-xs text-white outline-none transition-all"
                     >
                       <option value="Student">Student</option>
                       <option value="Fresher">Fresher (Graduate)</option>
                       <option value="Experienced">Experienced Professional</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-slate-300">Target Dream Company</label>
+                    <select
+                      {...register('targetCompany')}
+                      className="w-full bg-[#0d1222]/80 border border-brand-border focus-ring rounded-xl py-2.5 px-4 text-xs text-white outline-none transition-all"
+                    >
+                      <option value="">Select Dream Company</option>
+                      <option value="Google">Google</option>
+                      <option value="Amazon">Amazon</option>
+                      <option value="Microsoft">Microsoft</option>
+                      <option value="Meta">Meta</option>
+                      <option value="Adobe">Adobe</option>
+                      <option value="Oracle">Oracle</option>
+                      <option value="Salesforce">Salesforce</option>
+                      <option value="Capgemini">Capgemini</option>
+                      <option value="Cognizant">Cognizant</option>
+                      <option value="Deloitte">Deloitte</option>
+                      <option value="TCS">TCS</option>
+                      <option value="Infosys">Infosys</option>
+                      <option value="Wipro">Wipro</option>
+                      <option value="Tech Mahindra">Tech Mahindra</option>
+                      <option value="Accenture">Accenture</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-slate-300">Target Year</label>
+                    <select
+                      {...register('targetTimeline')}
+                      className="w-full bg-[#0d1222]/80 border border-brand-border focus-ring rounded-xl py-2.5 px-4 text-xs text-white outline-none transition-all"
+                    >
+                      <option value="">Select Target Year</option>
+                      <option value="2026">2026</option>
+                      <option value="2027">2027</option>
+                      <option value="2028">2028</option>
+                      <option value="2029">2029</option>
+                      <option value="2030">2030</option>
                     </select>
                   </div>
                 </div>
@@ -350,7 +392,7 @@ export default function OnboardingPage() {
                       value={inputVal.companies}
                       onChange={(e) => setInputVal(prev => ({ ...prev, companies: e.target.value }))}
                       onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddTag('companies', null, 'companies'); } }}
-                      className="flex-1 bg-[#0d1222]/80 border border-brand-border focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 rounded-xl py-2.5 px-4 text-xs text-white outline-none transition-all"
+                      className="flex-1 bg-[#0d1222]/80 border border-brand-border focus-ring rounded-xl py-2.5 px-4 text-xs text-white outline-none transition-all"
                     />
                     <button 
                       type="button"
@@ -391,7 +433,7 @@ export default function OnboardingPage() {
                       value={inputVal.languages}
                       onChange={(e) => setInputVal(prev => ({ ...prev, languages: e.target.value }))}
                       onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddTag('programmingLanguages', null, 'languages'); } }}
-                      className="flex-1 bg-[#0d1222]/80 border border-brand-border focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 rounded-xl py-2.5 px-4 text-xs text-white outline-none"
+                      className="flex-1 bg-[#0d1222]/80 border border-brand-border focus-ring rounded-xl py-2.5 px-4 text-xs text-white outline-none"
                     />
                     <button type="button" onClick={() => handleAddTag('programmingLanguages', null, 'languages')} className="px-4 py-2.5 bg-brand-primary rounded-xl text-xs font-bold text-white cursor-pointer"><Plus className="w-4 h-4" /></button>
                   </div>
@@ -414,7 +456,7 @@ export default function OnboardingPage() {
                       value={inputVal.frameworks}
                       onChange={(e) => setInputVal(prev => ({ ...prev, frameworks: e.target.value }))}
                       onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddTag('frameworks', null, 'frameworks'); } }}
-                      className="flex-1 bg-[#0d1222]/80 border border-brand-border focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 rounded-xl py-2.5 px-4 text-xs text-white outline-none"
+                      className="flex-1 bg-[#0d1222]/80 border border-brand-border focus-ring rounded-xl py-2.5 px-4 text-xs text-white outline-none"
                     />
                     <button type="button" onClick={() => handleAddTag('frameworks', null, 'frameworks')} className="px-4 py-2.5 bg-brand-primary rounded-xl text-xs font-bold text-white cursor-pointer"><Plus className="w-4 h-4" /></button>
                   </div>
@@ -437,7 +479,7 @@ export default function OnboardingPage() {
                       value={inputVal.databases}
                       onChange={(e) => setInputVal(prev => ({ ...prev, databases: e.target.value }))}
                       onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddTag('databases', null, 'databases'); } }}
-                      className="flex-1 bg-[#0d1222]/80 border border-brand-border focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 rounded-xl py-2.5 px-4 text-xs text-white outline-none"
+                      className="flex-1 bg-[#0d1222]/80 border border-brand-border focus-ring rounded-xl py-2.5 px-4 text-xs text-white outline-none"
                     />
                     <button type="button" onClick={() => handleAddTag('databases', null, 'databases')} className="px-4 py-2.5 bg-brand-primary rounded-xl text-xs font-bold text-white cursor-pointer"><Plus className="w-4 h-4" /></button>
                   </div>
@@ -460,7 +502,7 @@ export default function OnboardingPage() {
                       value={inputVal.tools}
                       onChange={(e) => setInputVal(prev => ({ ...prev, tools: e.target.value }))}
                       onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddTag('tools', null, 'tools'); } }}
-                      className="flex-1 bg-[#0d1222]/80 border border-brand-border focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 rounded-xl py-2.5 px-4 text-xs text-white outline-none"
+                      className="flex-1 bg-[#0d1222]/80 border border-brand-border focus-ring rounded-xl py-2.5 px-4 text-xs text-white outline-none"
                     />
                     <button type="button" onClick={() => handleAddTag('tools', null, 'tools')} className="px-4 py-2.5 bg-brand-primary rounded-xl text-xs font-bold text-white cursor-pointer"><Plus className="w-4 h-4" /></button>
                   </div>
@@ -489,7 +531,7 @@ export default function OnboardingPage() {
                       {...register('github', {
                         validate: val => !val || (val.startsWith('http') && val.includes('github.com')) || 'Must be a valid GitHub URL (e.g. https://github.com/username)'
                       })}
-                      className="w-full bg-[#0d1222]/80 border border-brand-border focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 rounded-xl py-2.5 px-4 text-xs text-white placeholder-slate-500 outline-none"
+                      className="w-full bg-[#0d1222]/80 border border-brand-border focus-ring rounded-xl py-2.5 px-4 text-xs text-white placeholder-slate-500 outline-none"
                     />
                     {errors.github && <p className="text-[10px] text-brand-error mt-0.5">{errors.github.message}</p>}
                   </div>
@@ -502,7 +544,7 @@ export default function OnboardingPage() {
                       {...register('linkedin', {
                         validate: val => !val || (val.startsWith('http') && val.includes('linkedin.com')) || 'Must be a valid LinkedIn URL (e.g. https://linkedin.com/in/username)'
                       })}
-                      className="w-full bg-[#0d1222]/80 border border-brand-border focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 rounded-xl py-2.5 px-4 text-xs text-white placeholder-slate-500 outline-none"
+                      className="w-full bg-[#0d1222]/80 border border-brand-border focus-ring rounded-xl py-2.5 px-4 text-xs text-white placeholder-slate-500 outline-none"
                     />
                     {errors.linkedin && <p className="text-[10px] text-brand-error mt-0.5">{errors.linkedin.message}</p>}
                   </div>
@@ -516,7 +558,7 @@ export default function OnboardingPage() {
                     {...register('portfolio', {
                       validate: val => !val || val.startsWith('http') || 'Must be a valid URL (starting with http/https)'
                     })}
-                    className="w-full bg-[#0d1222]/80 border border-brand-border focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 rounded-xl py-2.5 px-4 text-xs text-white placeholder-slate-500 outline-none"
+                    className="w-full bg-[#0d1222]/80 border border-brand-border focus-ring rounded-xl py-2.5 px-4 text-xs text-white placeholder-slate-500 outline-none"
                   />
                   {errors.portfolio && <p className="text-[10px] text-brand-error mt-0.5">{errors.portfolio.message}</p>}
                 </div>
@@ -527,7 +569,7 @@ export default function OnboardingPage() {
                     <input 
                       type="number"
                       {...register('dailyGoal', { min: { value: 1, message: 'Minimum 1 question' } })}
-                      className="w-full bg-[#0d1222]/80 border border-brand-border focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 rounded-xl py-2.5 px-4 text-xs text-white outline-none"
+                      className="w-full bg-[#0d1222]/80 border border-brand-border focus-ring rounded-xl py-2.5 px-4 text-xs text-white outline-none"
                     />
                     {errors.dailyGoal && <p className="text-[10px] text-brand-error mt-0.5">{errors.dailyGoal.message}</p>}
                   </div>
@@ -536,7 +578,7 @@ export default function OnboardingPage() {
                     <label className="text-xs font-semibold text-slate-300">Preferred Prep Difficulty</label>
                     <select
                       {...register('preferredDifficulty')}
-                      className="w-full bg-[#0d1222]/80 border border-brand-border focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 rounded-xl py-2.5 px-4 text-xs text-white outline-none"
+                      className="w-full bg-[#0d1222]/80 border border-brand-border focus-ring rounded-xl py-2.5 px-4 text-xs text-white outline-none"
                     >
                       <option value="Easy">Easy</option>
                       <option value="Medium">Medium</option>

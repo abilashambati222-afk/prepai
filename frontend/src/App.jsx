@@ -13,6 +13,15 @@ import ProfilePage from './pages/ProfilePage';
 import EditProfilePage from './pages/EditProfilePage';
 import DashboardPage from './pages/DashboardPage';
 import ResumePage from './pages/ResumePage';
+import InterviewDashboard from './pages/InterviewDashboard';
+import InterviewSetup from './pages/InterviewSetup';
+import InterviewSession from './pages/InterviewSession';
+import InterviewReport from './pages/InterviewReport';
+import InterviewHistory from './pages/InterviewHistory';
+import InterviewCertificates from './pages/InterviewCertificates';
+import CompanyInterview from './pages/CompanyInterview';
+import RoleInterview from './pages/RoleInterview';
+import InterviewAnalytics from './pages/InterviewAnalytics';
 import {
   Sparkles,
   ShieldCheck,
@@ -257,11 +266,18 @@ export default function App() {
               <Route path="profile" element={<ProfilePage />} />
               <Route path="profile/edit" element={<EditProfilePage />} />
               <Route path="resume-analyzer" element={<ResumePage />} />
-              <Route path="mock-interviews" element={<PlaceholderModule title="Mock Interviews" desc="Interactive interview simulation and scoring." />} />
+              <Route path="mock-interviews" element={<InterviewDashboard />} />
+              <Route path="mock-interviews/setup" element={<InterviewSetup />} />
+              <Route path="mock-interviews/session/:id" element={<InterviewSession />} />
+              <Route path="mock-interviews/report/:id" element={<InterviewReport />} />
+              <Route path="mock-interviews/history" element={<InterviewHistory />} />
+              <Route path="mock-interviews/certificates" element={<InterviewCertificates />} />
+              <Route path="mock-interviews/company" element={<CompanyInterview />} />
+              <Route path="mock-interviews/role" element={<RoleInterview />} />
               <Route path="coding-practice" element={<PlaceholderModule title="Coding practice" desc="Algorithmic practice sandbox." />} />
               <Route path="mcq-practice" element={<PlaceholderModule title="MCQ placement practice" desc="Subject-based conceptual quizzes." />} />
-              <Route path="company-prep" element={<PlaceholderModule title="Company-wise Prep" desc="Placement tracks for top tech firms." />} />
-              <Route path="analytics" element={<PlaceholderModule title="System Analytics" desc="Advanced student progression curves." />} />
+              <Route path="company-prep" element={<CompanyInterview />} />
+              <Route path="analytics" element={<InterviewAnalytics />} />
             </Route>
           </Routes>
         </BrowserRouter>

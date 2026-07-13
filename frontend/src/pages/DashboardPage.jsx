@@ -7,6 +7,7 @@ import {
   Sparkles,
   Flame,
   Code,
+  Target,
   Building,
   BellRing,
   ChevronRight,
@@ -72,7 +73,7 @@ export default function DashboardPage() {
     );
   }
 
-  const { user, streak, todaysGoal, quickStats, quickActions } = stats;
+  const { user, streak, todaysGoal, quickStats, quickActions, careerScore = 0, overallCareerScore = 0, targetCompanyReadiness = 0, completedInterviews = 0 } = stats;
 
   const resumeStatus = stats.resumeStatus || {
     uploaded: false,
@@ -114,7 +115,93 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* 2. SVG Circular completion widget */}
+      {/* 2. Career Goal Planner Card */}
+      {user.targetCompany && user.targetRole ? (
+        <div className="glass-panel p-6 rounded-2xl border-brand-border/40 relative overflow-hidden bg-gradient-to-r from-brand-primary/5 via-brand-secondary/5 to-transparent">
+          <div className="absolute inset-0 bg-gradient-to-r from-brand-primary/5 via-brand-accent/5 to-transparent pointer-events-none" />
+          <div className="relative z-10 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-brand-border/40 pb-3">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-brand-primary/10 border border-brand-primary/20 text-brand-primary rounded-xl">
+                  <Target className="w-5.5 h-5.5 animate-pulse" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-white">Long-term Career Goal Planner</h3>
+                  <p className="text-[10px] text-slate-400">Track your milestones and preparation towards your dream role.</p>
+                </div>
+              </div>
+              <Link
+                to="/profile/edit"
+                className="text-[10px] bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white px-3 py-1.5 rounded-xl border border-brand-border/60 transition-all font-bold self-start sm:self-center"
+              >
+                Modify Goal
+              </Link>
+            </div>
+
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+              {/* Left: Goal Details */}
+              <div className="space-y-3">
+                <div className="flex flex-wrap items-center gap-2 text-xs font-bold text-slate-300">
+                  <span className="text-white font-extrabold text-sm">{user.targetCompany}</span>
+                  <ChevronRight className="w-3.5 h-3.5 text-slate-500" />
+                  <span className="text-brand-secondary font-extrabold text-sm">{user.targetRole}</span>
+                  <ChevronRight className="w-3.5 h-3.5 text-slate-500" />
+                  <span className="bg-brand-accent/10 border border-brand-accent/20 text-brand-accent px-2 py-0.5 rounded text-[9px] font-black uppercase">
+                    Target {user.targetTimeline || '2028'}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-3 bg-white/2 border border-brand-border/40 rounded-xl">
+                    <span className="text-[9px] text-slate-400 block uppercase font-bold">Overall Career Score</span>
+                    <span className="text-sm font-black text-white">{overallCareerScore}%</span>
+                  </div>
+                  <div className="p-3 bg-white/2 border border-brand-border/40 rounded-xl">
+                    <span className="text-[9px] text-slate-400 block uppercase font-bold">{user.targetCompany} Readiness</span>
+                    <span className="text-sm font-black text-brand-primary">{targetCompanyReadiness}%</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right: Progress Flow Indicator */}
+              <div className="flex-1 max-w-md w-full space-y-2">
+                <div className="flex justify-between items-center text-[10px] text-slate-400">
+                  <span>Current: <strong>{targetCompanyReadiness}%</strong></span>
+                  <span className="text-brand-secondary">Remaining: <strong>{100 - targetCompanyReadiness}%</strong></span>
+                  <span>Goal: <strong>100%</strong></span>
+                </div>
+
+                <div className="w-full bg-[#030712]/80 rounded-full h-3 border border-brand-border/60 overflow-hidden p-[2px]">
+                  <div
+                    className="bg-gradient-to-r from-brand-primary to-brand-secondary h-full rounded-full transition-all duration-1000 ease-out"
+                    style={{ width: `${targetCompanyReadiness}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="glass-panel p-6 rounded-2xl border-brand-border/40 relative overflow-hidden bg-gradient-to-r from-brand-primary/5 to-transparent">
+          <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <h3 className="text-sm font-black text-white flex items-center gap-2">
+                <Target className="w-4.5 h-4.5 text-brand-primary" />
+                Initialize Career Goal Planner
+              </h3>
+              <p className="text-xs text-slate-400">Define your dream company, target role, and timeline to personalize readiness dashboards, resource recommendations, and study roadmaps.</p>
+            </div>
+            <Link
+              to="/profile/edit"
+              className="px-5 py-2.5 rounded-xl bg-brand-primary hover:bg-brand-primary/90 text-white font-bold text-xs transition-all text-center whitespace-nowrap active:scale-95"
+            >
+              Configure Career Goal
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {/* 3. SVG Circular completion widget */}
       <ProfileCompletionCard />
 
       {/* 3. Quick Statistics Grid */}
@@ -189,8 +276,8 @@ export default function DashboardPage() {
                     }
                   }}
                   className={`w-full p-4 rounded-xl border flex items-center justify-between transition-all duration-300 relative overflow-hidden group cursor-pointer ${act.available
-                      ? 'bg-brand-primary/5 hover:bg-brand-primary/10 border-brand-primary/25 hover:border-brand-primary/40 text-white'
-                      : 'bg-white/2 border-brand-border/30 text-slate-400 cursor-not-allowed'
+                    ? 'bg-brand-primary/5 hover:bg-brand-primary/10 border-brand-primary/25 hover:border-brand-primary/40 text-white'
+                    : 'bg-white/2 border-brand-border/30 text-slate-400 cursor-not-allowed'
                     }`}
                 >
                   <div className="flex items-center gap-3">
@@ -319,7 +406,7 @@ export default function DashboardPage() {
               </div>
               <div>
                 <h4 className="text-xs font-extrabold text-white">Mock Interviews</h4>
-                <span className="text-[9px] font-bold uppercase tracking-wider text-brand-warning">Phase 4</span>
+                <span className="text-[9px] font-bold uppercase tracking-wider text-brand-success">Phase 4 (Active)</span>
               </div>
             </div>
             <div className="space-y-1.5 pt-1">
@@ -327,13 +414,17 @@ export default function DashboardPage() {
                 Simulate placements rounds using custom generated questions.
               </p>
               <div className="text-[10px] text-slate-400 font-semibold italic">
-                0 Simulations completed
+                {completedInterviews} Simulation{completedInterviews !== 1 ? 's' : ''} completed
               </div>
             </div>
             <div className="pt-3 border-t border-brand-border/40">
-              <button disabled className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl bg-white/5 border border-brand-border/40 text-[10px] text-slate-500 font-bold cursor-not-allowed">
-                Simulate Interview (Coming Soon)
-              </button>
+              <Link
+                to="/mock-interviews"
+                className="w-full flex items-center justify-center gap-1.5 py-2.5 bg-brand-secondary/10 border border-brand-secondary/25 hover:bg-brand-secondary/20 text-brand-secondary rounded-xl text-xs font-bold transition-all text-center"
+              >
+                Simulate Interview
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
             </div>
           </div>
 

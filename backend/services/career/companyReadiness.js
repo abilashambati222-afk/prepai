@@ -44,9 +44,10 @@ exports.calculateCompanyReadiness = (parsedData, userProfile) => {
         dsaLevel: profile.dsaLevel,
         communicationWeight: profile.communicationWeight,
         leadershipWeight: profile.leadershipWeight,
-        weights: isProduct 
-          ? { skills: 0.35, projects: 0.25, experience: 0.15, education: 0.15, resumeQuality: 0.05, certifications: 0.05 }
-          : { skills: 0.20, projects: 0.15, experience: 0.05, education: 0.20, resumeQuality: 0.20, certifications: 0.20 }
+        cloudWeight: profile.cloudWeight,
+        backendWeight: profile.backendWeight,
+        frontendWeight: profile.frontendWeight,
+        resumeWeight: profile.resumeWeight
       };
 
       const analysis = ruleEngine.evaluateResume(parsedData, userProfile, criteria);
@@ -121,7 +122,8 @@ exports.calculateCompanyReadiness = (parsedData, userProfile) => {
         strengths: strengths.slice(0, 4),
         missing: missing.slice(0, 4),
         projectsRequired,
-        estimatedPrepTime
+        estimatedPrepTime,
+        factors: analysis.factors
       });
     } catch (err) {
       console.error(`[Company Readiness] Failed to evaluate profile: ${profile.company}`, err);

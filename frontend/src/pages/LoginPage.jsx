@@ -52,7 +52,7 @@ export default function LoginPage() {
           </div>
           <div>
             <h1 className="text-2xl font-extrabold text-white tracking-tight">
-              Welcome back to <span className="text-gradient">PrepAI</span>
+              Welcome back to <span className="text-gradient-animate">PrepAI</span>
             </h1>
             <p className="text-xs text-slate-400 mt-1 font-medium">Practice Smarter. Interview Better.</p>
           </div>
@@ -91,7 +91,7 @@ export default function LoginPage() {
                     message: 'Please enter a valid email address'
                   }
                 })}
-                className="w-full bg-[#0d1222]/80 border border-brand-border/80 focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 rounded-xl py-3 pl-11 pr-4 text-sm text-white placeholder-slate-500 outline-none transition-all"
+                className="w-full bg-[#0d1222]/80 border border-brand-border/80 focus-ring rounded-xl py-3 pl-11 pr-4 text-sm text-white placeholder-slate-500 outline-none transition-all"
               />
             </div>
           </div>
@@ -115,7 +115,7 @@ export default function LoginPage() {
                     message: 'Password must be at least 6 characters long'
                   }
                 })}
-                className="w-full bg-[#0d1222]/80 border border-brand-border/80 focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 rounded-xl py-3 pl-11 pr-11 text-sm text-white placeholder-slate-500 outline-none transition-all"
+                className="w-full bg-[#0d1222]/80 border border-brand-border/80 focus-ring rounded-xl py-3 pl-11 pr-11 text-sm text-white placeholder-slate-500 outline-none transition-all"
               />
               <button
                 type="button"

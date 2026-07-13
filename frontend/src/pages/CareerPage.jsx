@@ -86,6 +86,7 @@ export default function CareerPage() {
   const [activeMainTab, setActiveMainTab] = useState('readiness'); // 'readiness' | 'skillgap' | 'roadmap' | 'recommendations'
   const [activeCompanyFilter, setActiveCompanyFilter] = useState('all'); // 'all' | 'ready' | 'almost' | 'improve'
   const [expandedCompany, setExpandedCompany] = useState(null);
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
     fetchData();
@@ -94,10 +95,11 @@ export default function CareerPage() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [careerRes, jdRes, historyRes] = await Promise.all([
+      const [careerRes, jdRes, historyRes, profileRes] = await Promise.all([
         api.get('/career'),
         api.get('/job-descriptions'),
-        api.get('/career/history')
+        api.get('/career/history'),
+        api.get('/profile')
       ]);
 
       if (careerRes.data?.success) {
@@ -111,6 +113,9 @@ export default function CareerPage() {
       }
       if (historyRes.data?.success) {
         setHistoryData(historyRes.data.data);
+      }
+      if (profileRes.data?.success) {
+        setUser(profileRes.data.data.user);
       }
     } catch (err) {
       console.error('Failed to load career intelligence data:', err);
@@ -161,6 +166,10 @@ export default function CareerPage() {
 
   const {
     careerScore = 0,
+    overallCareerScore = 0,
+    targetCompanyReadiness = 0,
+    companyRank = 0,
+    careerScoreFactors = {},
     companyReadiness = [],
     companyRecommendations = { ready: [], almostReady: [], needImprovement: [], explanation: '' },
     recommendedRoles = [],
@@ -241,6 +250,39 @@ export default function CareerPage() {
         </div>
       </div>
 
+      {/* Career Goal Planner Card */}
+      {user && user.targetCompany && user.targetRole && (
+        <div className="glass-panel p-6 rounded-2xl border-brand-border/40 relative overflow-hidden bg-gradient-to-r from-brand-primary/5 via-brand-secondary/5 to-transparent">
+          <div className="absolute inset-0 bg-gradient-to-r from-brand-primary/5 via-brand-accent/5 to-transparent pointer-events-none" />
+          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="space-y-1">
+              <div className="flex items-center gap-1.5 text-xs text-brand-primary font-bold uppercase tracking-wider">
+                <Target className="w-3.5 h-3.5 animate-pulse" /> Active Career Target
+              </div>
+              <h3 className="text-sm font-black text-white">
+                Preparing for <span className="text-brand-secondary">{user.targetCompany}</span> as a <span className="text-brand-secondary">{user.targetRole}</span>
+              </h3>
+              <p className="text-[10px] text-slate-400 font-bold">Target Timeline: {user.targetTimeline || '2028'}</p>
+            </div>
+            
+            <div className="flex items-center gap-4 flex-1 max-w-sm w-full">
+              <div className="flex-1 space-y-1">
+                <div className="flex justify-between text-[9px] text-slate-400 font-bold">
+                  <span>Current: {careerScore}%</span>
+                  <span>Goal: 100%</span>
+                </div>
+                <div className="w-full bg-[#030712]/80 h-2 rounded-full overflow-hidden p-[1px] border border-brand-border/40">
+                  <div className="bg-gradient-to-r from-brand-primary to-brand-secondary h-full rounded-full" style={{ width: `${careerScore}%` }} />
+                </div>
+              </div>
+              <div className="text-center font-black text-white bg-white/5 border border-brand-border px-3 py-1.5 rounded-xl text-xs whitespace-nowrap">
+                {100 - careerScore}% Left
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 2. Target Job Selector & Global Sync Controls */}
       <div className="glass-panel p-6 rounded-2xl border-brand-border/40 space-y-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -256,7 +298,7 @@ export default function CareerPage() {
               <select
                 value={selectedJdId}
                 onChange={(e) => setSelectedJdId(e.target.value)}
-                className="bg-brand-dark/80 border border-brand-border/80 text-xs text-slate-200 px-3 py-2 rounded-xl focus:border-brand-primary focus:outline-none min-w-[200px] h-10 shadow-inner"
+                className="bg-brand-dark/80 border border-brand-border/80 text-xs text-slate-200 px-3 py-2 rounded-xl focus-ring min-w-[200px] h-10 shadow-inner"
               >
                 {jobDescriptions.map(jd => (
                   <option key={jd._id} value={jd._id}>
@@ -323,31 +365,94 @@ export default function CareerPage() {
             <div className="lg:col-span-2 space-y-6">
               
               {/* Overall Career Score Card */}
-              <div className="glass-panel p-6 rounded-2xl border-brand-border/40 flex flex-col sm:flex-row items-center justify-between gap-6 relative overflow-hidden">
+              <div className="glass-panel p-6 rounded-2xl border-brand-border/40 space-y-6 relative overflow-hidden">
                 <div className="absolute -left-6 -bottom-6 w-24 h-24 rounded-full bg-brand-primary/5 blur-2xl pointer-events-none" />
-                <div className="space-y-3 max-w-md text-center sm:text-left">
-                  <span className="text-[10px] font-extrabold uppercase bg-brand-primary/10 border border-brand-primary/20 text-brand-primary px-3 py-1 rounded-full">
-                    Overall Evaluation
-                  </span>
-                  <h3 className="text-lg font-extrabold text-white">Your Career Readiness Score</h3>
-                  <p className="text-xs text-slate-400 leading-relaxed">
-                    This score is dynamically calculated across core skills breadth, internship profiles, college rankings, and project quality.
-                  </p>
-                </div>
-                <div className="flex items-center gap-4 flex-col sm:flex-row shrink-0">
-                  <ProgressRing radius={52} stroke={6} progress={careerScore} colorClass={getProgressColor(careerScore)} sizeText="text-lg" />
-                  <div className="text-center sm:text-left">
-                    <span className="text-[9px] text-slate-500 block uppercase font-bold tracking-wider">Status Rank</span>
-                    <span className="text-xs font-black text-white bg-white/5 border border-brand-border px-3 py-1 rounded-lg block mt-1">
-                      {careerScore >= 75 ? 'Tier-1 Candidate' : careerScore >= 50 ? 'Intermediate Candidate' : 'Emerging Candidate'}
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+                  <div className="space-y-3 max-w-md text-center sm:text-left">
+                    <span className="text-[10px] font-extrabold uppercase bg-brand-primary/10 border border-brand-primary/20 text-brand-primary px-3 py-1 rounded-full">
+                      Overall Evaluation
                     </span>
+                    <h3 className="text-lg font-extrabold text-white">Your Overall Employability Score</h3>
+                    <p className="text-xs text-slate-400 leading-relaxed">
+                      This score represents your overall employability, technical skills breadth, resume quality, and project strength independent of specific company criteria.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-4 flex-col sm:flex-row shrink-0">
+                    <ProgressRing radius={52} stroke={6} progress={overallCareerScore} colorClass={getProgressColor(overallCareerScore)} sizeText="text-lg" />
+                    <div className="text-center sm:text-left">
+                      <span className="text-[9px] text-slate-500 block uppercase font-bold tracking-wider">Employability Rank</span>
+                      <span className="text-xs font-black text-white bg-white/5 border border-brand-border px-3 py-1 rounded-lg block mt-1">
+                        {overallCareerScore >= 75 ? 'Tier-1 Candidate' : overallCareerScore >= 50 ? 'Intermediate Candidate' : 'Emerging Candidate'}
+                      </span>
+                    </div>
                   </div>
                 </div>
+
+                {/* Why This Score? Breakdown Section */}
+                {careerScoreFactors && Object.keys(careerScoreFactors).length > 0 && (
+                  <div className="border-t border-brand-border/40 pt-4 space-y-4">
+                    <div className="flex justify-between items-center">
+                      <h4 className="text-xs font-black text-white uppercase tracking-wider">"Why This Score?" Score Breakdown</h4>
+                      <span className="text-[9px] text-slate-400 font-bold">Sum of category points</span>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                      {Object.entries(careerScoreFactors).filter(([key]) => key !== 'resumeQuality').map(([key, val]) => {
+                        const displayName = key === 'resume' ? 'Resume' : key.charAt(0).toUpperCase() + key.slice(1);
+                        return (
+                          <div key={key} className="p-3 rounded-xl bg-white/2 border border-brand-border/40 space-y-1.5">
+                            <div className="flex justify-between items-center text-[10px] font-bold">
+                              <span className="text-slate-300">{displayName}</span>
+                              <span className="text-white font-extrabold">{val.points || 0} / {val.max || 10}</span>
+                            </div>
+                            <div className="w-full bg-[#030712]/80 h-1.5 rounded-full overflow-hidden p-[1px] border border-brand-border/40">
+                              <div
+                                className="bg-brand-primary h-full rounded-full transition-all duration-500"
+                                style={{ width: `${((val.points || 0) / (val.max || 10)) * 100}%` }}
+                              />
+                            </div>
+                            {val.reasons && val.reasons.length > 0 && (
+                              <p className="text-[8px] text-slate-400 truncate leading-relaxed">
+                                {val.reasons[0]}
+                              </p>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
+
+              {/* Target Company Readiness Card */}
+              {user && user.targetCompany && (
+                <div className="glass-panel p-6 rounded-2xl border-brand-border/40 space-y-4 bg-gradient-to-br from-brand-secondary/5 via-white/0 to-white/0">
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+                    <div className="space-y-3 max-w-md text-center sm:text-left">
+                      <span className="text-[10px] font-extrabold uppercase bg-brand-secondary/10 border border-brand-secondary/20 text-brand-secondary px-3 py-1 rounded-full">
+                        Target Placement Match
+                      </span>
+                      <h3 className="text-lg font-extrabold text-white">{user.targetCompany} Readiness</h3>
+                      <p className="text-xs text-slate-400 leading-relaxed">
+                        Your technical compatibility score specifically tailored for {user.targetCompany}'s candidate requirements.
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-4 flex-col sm:flex-row shrink-0">
+                      <ProgressRing radius={52} stroke={6} progress={targetCompanyReadiness} colorClass={getProgressColor(targetCompanyReadiness)} sizeText="text-lg" />
+                      <div className="text-center sm:text-left">
+                        <span className="text-[9px] text-slate-500 block uppercase font-bold tracking-wider">Placement Rank</span>
+                        <span className="text-xs font-black text-white bg-white/5 border border-brand-border px-3 py-1 rounded-lg block mt-1">
+                          Rank {companyRank || 15} / 15
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Resume Evolution & Progress Summary */}
               {historyData && historyData.previousCareerScore > 0 && (
-                <div className="glass-panel p-6 rounded-2xl border-brand-border/40 space-y-4 bg-gradient-to-br from-brand-primary/5 via-white/0 to-white/0">
+                <div className="glass-panel p-6 rounded-2xl border-brand-border/40 space-y-5 bg-gradient-to-br from-brand-primary/5 via-white/0 to-white/0">
                   <div>
                     <h3 className="text-xs font-extrabold text-white flex items-center gap-2">
                       <TrendingUp className="w-4 h-4 text-brand-primary animate-pulse" />
@@ -356,86 +461,66 @@ export default function CareerPage() {
                     <p className="text-[10px] text-slate-400">Compare your progress across uploaded resume iterations.</p>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-4 text-center">
-                    <div className="p-3 bg-white/2 border border-brand-border/40 rounded-xl space-y-1">
-                      <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">Career Score</span>
-                      <div className="flex items-center justify-center gap-1.5 flex-wrap">
-                        <span className="text-xs text-slate-400 font-bold">{historyData.previousCareerScore}%</span>
-                        <ArrowRight className="w-3 h-3 text-slate-500" />
-                        <span className="text-sm text-white font-black">{historyData.currentCareerScore}%</span>
-                      </div>
-                      <span className={`text-[9px] font-black block ${historyData.improvementPercent >= 0 ? 'text-brand-primary' : 'text-rose-400'}`}>
-                        {historyData.improvementPercent >= 0 ? `+${historyData.improvementPercent}%` : `${historyData.improvementPercent}%`} Improvement
-                      </span>
-                    </div>
-
-                    <div className="p-3 bg-white/2 border border-brand-border/40 rounded-xl space-y-1">
-                      <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">Skills Inventory</span>
-                      <div className="flex items-center justify-center gap-1.5 flex-wrap">
-                        <span className="text-xs text-slate-400 font-bold">Previous</span>
-                        <ArrowRight className="w-3 h-3 text-slate-500" />
-                        <span className="text-sm text-white font-black">+{historyData.skillGrowth}</span>
-                      </div>
-                      <span className="text-[9px] text-brand-secondary font-black block">
-                        Expanded Skills
-                      </span>
-                    </div>
-
-                    <div className="p-3 bg-white/2 border border-brand-border/40 rounded-xl space-y-1">
-                      <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">Company Matches</span>
-                      <div className="flex items-center justify-center gap-1.5 flex-wrap">
-                        <span className="text-xs text-slate-400 font-bold">Previous</span>
-                        <ArrowRight className="w-3 h-3 text-slate-500" />
-                        <span className="text-sm text-white font-black">+{historyData.readinessGrowth}</span>
-                      </div>
-                      <span className="text-[9px] text-brand-accent font-black block">
-                        Eligible Firms
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Detailed list of additions */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-3 border-t border-brand-border/30 text-[10px]">
-                    {/* New Skills */}
-                    <div className="space-y-1 bg-white/2 p-2.5 rounded-lg border border-brand-border/30">
-                      <span className="font-extrabold uppercase text-[8px] tracking-wide text-brand-primary block">New Skills Gained</span>
+                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                    {/* Added Skills */}
+                    <div className="space-y-2 bg-[#030712]/50 p-3.5 rounded-xl border border-brand-border/40">
+                      <span className="font-black uppercase text-[10px] tracking-wider text-brand-primary block">Added Skills</span>
                       {historyData.newSkills && historyData.newSkills.length > 0 ? (
-                        <div className="flex flex-wrap gap-1 pt-1">
+                        <ul className="space-y-1.5 pt-1">
                           {historyData.newSkills.map(s => (
-                            <span key={s} className="px-1.5 py-0.5 rounded bg-brand-primary/10 border border-brand-primary/20 text-[8px] font-semibold text-brand-primary">+{s}</span>
+                            <li key={s} className="text-xs text-slate-300 font-medium flex items-center gap-1.5">
+                              <span className="text-[10px] text-emerald-400 font-extrabold">+</span>
+                              <span>{s}</span>
+                            </li>
                           ))}
-                        </div>
+                        </ul>
                       ) : (
-                        <span className="text-slate-500 italic text-[9px] block pt-1">No new skills detected</span>
+                        <span className="text-slate-500 italic text-[10px] block pt-1">No new skills detected</span>
                       )}
                     </div>
 
                     {/* Projects Added */}
-                    <div className="space-y-1 bg-white/2 p-2.5 rounded-lg border border-brand-border/30">
-                      <span className="font-extrabold uppercase text-[8px] tracking-wide text-brand-secondary block">Projects Added</span>
+                    <div className="space-y-2 bg-[#030712]/50 p-3.5 rounded-xl border border-brand-border/40">
+                      <span className="font-black uppercase text-[10px] tracking-wider text-brand-secondary block">Projects Added</span>
                       {historyData.projectsAdded && historyData.projectsAdded.length > 0 ? (
-                        <div className="space-y-0.5 pt-1">
+                        <ul className="space-y-1.5 pt-1">
                           {historyData.projectsAdded.map(p => (
-                            <div key={p} className="text-[9px] text-slate-300 font-medium truncate">🚀 {p}</div>
+                            <li key={p} className="text-xs text-slate-300 font-medium flex items-center gap-1.5">
+                              <span className="text-[10px] text-brand-secondary font-extrabold">+</span>
+                              <span className="truncate max-w-[110px]">{p}</span>
+                            </li>
                           ))}
-                        </div>
+                        </ul>
                       ) : (
-                        <span className="text-slate-500 italic text-[9px] block pt-1">No new projects listed</span>
+                        <span className="text-slate-500 italic text-[10px] block pt-1">No new projects listed</span>
                       )}
                     </div>
 
-                    {/* Companies Unlocked */}
-                    <div className="space-y-1 bg-white/2 p-2.5 rounded-lg border border-brand-border/30">
-                      <span className="font-extrabold uppercase text-[8px] tracking-wide text-brand-accent block">Companies Unlocked</span>
+                    {/* Unlocked Companies */}
+                    <div className="space-y-2 bg-[#030712]/50 p-3.5 rounded-xl border border-brand-border/40">
+                      <span className="font-black uppercase text-[10px] tracking-wider text-brand-accent block">Unlocked Companies</span>
                       {historyData.companiesUnlocked && historyData.companiesUnlocked.length > 0 ? (
-                        <div className="flex flex-wrap gap-1 pt-1">
+                        <ul className="space-y-1.5 pt-1">
                           {historyData.companiesUnlocked.map(c => (
-                            <span key={c} className="px-1.5 py-0.5 rounded bg-brand-accent/10 border border-brand-accent/20 text-[8px] font-semibold text-brand-accent">🔓 {c}</span>
+                            <li key={c} className="text-xs text-slate-300 font-medium flex items-center gap-1.5">
+                              <span className="text-[10px] text-brand-accent font-extrabold">+</span>
+                              <span>{c}</span>
+                            </li>
                           ))}
-                        </div>
+                        </ul>
                       ) : (
-                        <span className="text-slate-500 italic text-[9px] block pt-1">Target matches unchanged</span>
+                        <span className="text-slate-500 italic text-[10px] block pt-1">Target matches unchanged</span>
                       )}
+                    </div>
+
+                    {/* Career Score Trend */}
+                    <div className="space-y-2 bg-[#030712]/50 p-3.5 rounded-xl border border-brand-border/40 flex flex-col justify-between items-center text-center">
+                      <span className="font-black uppercase text-[10px] tracking-wider text-white block w-full">Career Score</span>
+                      <div className="flex flex-col items-center justify-center py-2">
+                        <span className="text-slate-400 font-extrabold text-sm">{historyData.previousCareerScore}%</span>
+                        <div className="text-brand-primary font-black text-xs my-0.5">↓</div>
+                        <span className="text-white font-black text-lg">{historyData.currentCareerScore}%</span>
+                      </div>
                     </div>
                   </div>
                 </div>

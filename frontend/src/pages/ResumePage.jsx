@@ -2,14 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../lib/api';
 import { useToast } from '../components/Toast';
-import { 
-  FileText, 
-  UploadCloud, 
-  Trash2, 
-  RefreshCw, 
-  Eye, 
-  FileCheck, 
-  AlertTriangle, 
+import PdfPreview from '../components/PdfPreview';
+import ResumeCompare from '../components/ResumeCompare';
+import {
+  FileText,
+  UploadCloud,
+  Trash2,
+  RefreshCw,
+  Eye,
+  FileCheck,
+  AlertTriangle,
   Loader,
   Calendar,
   Layers,
@@ -47,12 +49,47 @@ export default function ResumePage() {
   const [activeTab, setActiveTab] = useState('manage'); // 'manage' | 'parser' | 'analyst'
   const [resume, setResume] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  const getHealthBadgeStyles = (health) => {
+    switch (health) {
+      case 'Excellent':
+        return 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400';
+      case 'Good':
+        return 'bg-teal-500/10 border-teal-500/30 text-teal-400';
+      case 'Average':
+        return 'bg-amber-500/10 border-amber-500/30 text-amber-400';
+      case 'Needs Improvement':
+        return 'bg-orange-500/10 border-orange-500/30 text-orange-400';
+      case 'Poor':
+        return 'bg-red-500/10 border-red-500/30 text-red-400';
+      default:
+        return 'bg-slate-500/10 border-slate-500/30 text-slate-400';
+    }
+  };
+
+  const getHealthBadgeStars = (health) => {
+    switch (health) {
+      case 'Excellent':
+        return '★★★★★ Excellent';
+      case 'Good':
+        return '★★★★☆ Good';
+      case 'Average':
+        return '★★★☆☆ Average';
+      case 'Needs Improvement':
+        return '★★☆☆☆ Needs Improvement';
+      case 'Poor':
+        return '★☆☆☆☆ Poor';
+      default:
+        return '★★★☆☆ Average';
+    }
+  };
   const [uploading, setUploading] = useState(false);
   const [parsing, setParsing] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [dragActive, setDragActive] = useState(false);
-  
+  const [showComparison, setShowComparison] = useState(false);
+
   // Advanced features
   const [devMode, setDevMode] = useState(false);
   const [parsingStep, setParsingStep] = useState(0);
@@ -169,12 +206,16 @@ export default function ResumePage() {
     }
   };
 
-  const uploadFile = async (file) => {
+  const uploadFile = async (file, force = false) => {
     setUploading(true);
     setUploadProgress(0);
 
     const formData = new FormData();
     formData.append('resume', file);
+
+    // Pass force reanalyze query param if requested
+    const url = resume ? `/resume/replace${force ? '?forceReanalyze=true' : ''}` : `/resume/upload${force ? '?forceReanalyze=true' : ''}`;
+    const method = resume ? 'put' : 'post';
 
     try {
       const interval = setInterval(() => {
@@ -187,9 +228,6 @@ export default function ResumePage() {
         });
       }, 100);
 
-      const url = resume ? '/resume/replace' : '/resume/upload';
-      const method = resume ? 'put' : 'post';
-      
       const response = await api({
         method,
         url,
@@ -201,8 +239,17 @@ export default function ResumePage() {
       setUploadProgress(100);
 
       if (response.data?.success) {
-        showToast(resume ? 'Resume replaced successfully!' : 'Resume uploaded successfully!', 'success');
-        setResume(response.data.data.resumeMetadata);
+        if (response.data.duplicate) {
+          if (window.confirm("This resume is identical to your latest uploaded version. Do you want to analyze it again?")) {
+            // Re-upload with forceReanalyze set to true
+            uploadFile(file, true);
+          } else {
+            setResume(response.data.data.resumeMetadata);
+          }
+        } else {
+          showToast(resume ? 'Resume replaced successfully!' : 'Resume uploaded successfully!', 'success');
+          setResume(response.data.data.resumeMetadata);
+        }
       }
     } catch (err) {
       showToast(err.message || 'File upload failed.', 'error');
@@ -418,7 +465,7 @@ export default function ResumePage() {
 
   return (
     <div className="space-y-8 w-full max-w-5xl mx-auto">
-      
+
       {/* Header section with tab switches */}
       <div className="flex items-center justify-between flex-wrap gap-4 border-b border-brand-border/60 pb-5">
         <div>
@@ -431,31 +478,28 @@ export default function ResumePage() {
           <div className="flex gap-1.5 p-1 bg-[#090d16] border border-brand-border/60 rounded-xl">
             <button
               onClick={() => setActiveTab('manage')}
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                activeTab === 'manage' 
-                  ? 'bg-brand-primary text-white shadow-md' 
+              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${activeTab === 'manage'
+                  ? 'bg-brand-primary text-white shadow-md'
                   : 'text-slate-400 hover:text-slate-200'
-              }`}
+                }`}
             >
               Manage Resume
             </button>
             <button
               onClick={() => setActiveTab('parser')}
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                activeTab === 'parser' 
-                  ? 'bg-brand-primary text-white shadow-md' 
+              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${activeTab === 'parser'
+                  ? 'bg-brand-primary text-white shadow-md'
                   : 'text-slate-400 hover:text-slate-200'
-              }`}
+                }`}
             >
               Parser Console
             </button>
             <button
               onClick={() => setActiveTab('analyst')}
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                activeTab === 'analyst' 
-                  ? 'bg-brand-primary text-white shadow-md' 
+              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${activeTab === 'analyst'
+                  ? 'bg-brand-primary text-white shadow-md'
                   : 'text-slate-400 hover:text-slate-200'
-              }`}
+                }`}
             >
               AI Analyst
             </button>
@@ -476,23 +520,22 @@ export default function ResumePage() {
           >
             {/* Left Upload Drag & Drop Area */}
             <div className="md:col-span-2 space-y-6">
-              <div 
+              <div
                 onDragEnter={handleDrag}
                 onDragOver={handleDrag}
                 onDragLeave={handleDrag}
                 onDrop={handleDrop}
-                className={`glass-panel p-8 rounded-2xl border-2 border-dashed text-center flex flex-col items-center justify-center min-h-[260px] relative transition-all duration-300 ${
-                  dragActive 
-                    ? 'border-brand-primary bg-brand-primary/5 scale-[1.01]' 
+                className={`glass-panel p-8 rounded-2xl border-2 border-dashed text-center flex flex-col items-center justify-center min-h-[260px] relative transition-all duration-300 ${dragActive
+                    ? 'border-brand-primary bg-brand-primary/5 scale-[1.01]'
                     : 'border-brand-border/80 hover:border-brand-primary/40'
-                }`}
+                  }`}
               >
-                <input 
-                  type="file" 
-                  id="file-upload" 
-                  accept=".pdf" 
-                  onChange={handleFileChange} 
-                  className="hidden" 
+                <input
+                  type="file"
+                  id="file-upload"
+                  accept=".pdf"
+                  onChange={handleFileChange}
+                  className="hidden"
                 />
 
                 {uploading ? (
@@ -501,7 +544,7 @@ export default function ResumePage() {
                     <div className="space-y-2">
                       <p className="text-xs font-semibold text-slate-300">Uploading your PDF resume...</p>
                       <div className="w-full bg-brand-dark/60 rounded-full h-2 overflow-hidden border border-brand-border">
-                        <div 
+                        <div
                           className="bg-brand-primary h-full transition-all duration-300"
                           style={{ width: `${uploadProgress}%` }}
                         />
@@ -524,6 +567,16 @@ export default function ResumePage() {
                   </div>
                 )}
               </div>
+
+              {resume && (
+                <div className="glass-panel p-6 rounded-2xl space-y-4">
+                  <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                    <FileText className="w-4.5 h-4.5 text-brand-primary" />
+                    Resume Preview (No Download Required)
+                  </h3>
+                  <PdfPreview fileUrl={fileUrl} />
+                </div>
+              )}
             </div>
 
             {/* Right Status Card */}
@@ -563,25 +616,25 @@ export default function ResumePage() {
                   </div>
 
                   <div className="pt-2 flex flex-col gap-2.5">
-                    <a 
-                      href={fileUrl} 
-                      target="_blank" 
+                    <a
+                      href={fileUrl}
+                      target="_blank"
                       rel="noopener noreferrer"
                       className="w-full py-2.5 bg-brand-primary text-white rounded-xl text-xs font-bold hover:brightness-110 active:scale-98 transition-all flex items-center justify-center gap-1.5"
                     >
                       <Eye className="w-4 h-4" />
                       View PDF
                     </a>
-                    
+
                     <div className="grid grid-cols-2 gap-2.5">
-                      <label 
+                      <label
                         htmlFor="file-upload"
                         className="py-2.5 bg-white/5 border border-brand-border hover:bg-white/10 text-white rounded-xl text-xs font-bold text-center cursor-pointer transition-all flex items-center justify-center gap-1.5"
                       >
                         <RefreshCw className="w-3.5 h-3.5" />
                         Replace
                       </label>
-                      <button 
+                      <button
                         onClick={handleDelete}
                         className="py-2.5 bg-brand-error/10 border border-brand-error/25 hover:bg-brand-error/20 text-brand-error rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                       >
@@ -602,7 +655,7 @@ export default function ResumePage() {
                       Upload your profile resume now to enable resume parsing audits.
                     </p>
                   </div>
-                  <label 
+                  <label
                     htmlFor="file-upload"
                     className="w-full inline-flex items-center justify-center gap-1.5 py-2.5 bg-brand-primary text-white rounded-xl text-xs font-bold hover:brightness-110 active:scale-98 transition-all cursor-pointer"
                   >
@@ -627,7 +680,7 @@ export default function ResumePage() {
             {/* Parser execution card with developer toggle */}
             <div className="glass-panel p-6 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-r from-brand-primary/5 via-brand-secondary/5 to-transparent pointer-events-none" />
-              
+
               <div className="flex items-center gap-4.5 min-w-0 flex-1">
                 <div className="p-4 bg-brand-primary/10 border border-brand-primary/20 text-brand-primary rounded-2xl shrink-0">
                   <Cpu className="w-7 h-7" />
@@ -668,11 +721,10 @@ export default function ResumePage() {
                 {resume.status === 'Parsed' && (
                   <button
                     onClick={() => setDevMode(!devMode)}
-                    className={`w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 border rounded-xl text-[10px] font-bold transition-all cursor-pointer ${
-                      devMode 
-                        ? 'bg-brand-secondary/20 border-brand-secondary text-brand-secondary' 
+                    className={`w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 border rounded-xl text-[10px] font-bold transition-all cursor-pointer ${devMode
+                        ? 'bg-brand-secondary/20 border-brand-secondary text-brand-secondary'
                         : 'bg-white/5 border-brand-border text-slate-400 hover:text-slate-200'
-                    }`}
+                      }`}
                   >
                     <Terminal className="w-3.5 h-3.5" />
                     {devMode ? 'Hide Developer Log' : 'Show Developer Log'}
@@ -703,32 +755,44 @@ export default function ResumePage() {
                   </div>
 
                   <div className="space-y-4.5 text-xs relative before:absolute before:left-2 before:top-2 before:bottom-2 before:w-[1px] before:bg-brand-border">
-                    <div className={`relative pl-6 flex items-center justify-between ${parsingStep >= 1 ? 'text-white' : 'text-slate-500'}`}>
-                      <div className="absolute left-[4.5px] w-2 h-2 rounded-full bg-brand-primary" />
-                      <span>Validating file structure</span>
-                      {parsingStep > 1 && <CheckCircle className="w-4 h-4 text-brand-success" />}
-                    </div>
-                    <div className={`relative pl-6 flex items-center justify-between ${parsingStep >= 2 ? 'text-white' : 'text-slate-500'}`}>
-                      <div className="absolute left-[4.5px] w-2 h-2 rounded-full bg-brand-primary" />
-                      <span>Hashing SHA-256 key</span>
-                      {parsingStep > 2 && <CheckCircle className="w-4 h-4 text-brand-success" />}
-                    </div>
-                    <div className={`relative pl-6 flex items-center justify-between ${parsingStep >= 3 ? 'text-white' : 'text-slate-500'}`}>
-                      <div className="absolute left-[4.5px] w-2 h-2 rounded-full bg-brand-primary" />
-                      <span>Extracting text streams</span>
-                      {parsingStep > 3 && <CheckCircle className="w-4 h-4 text-brand-success" />}
-                    </div>
-                    <div className={`relative pl-6 flex items-center justify-between ${parsingStep >= 4 ? 'text-white' : 'text-slate-500'}`}>
-                      <div className="absolute left-[4.5px] w-2 h-2 rounded-full bg-brand-primary" />
-                      <span>Segmenting layout categories</span>
-                      {parsingStep > 4 && <CheckCircle className="w-4 h-4 text-brand-success" />}
-                    </div>
+                    {(resume?.processingSteps && resume.processingSteps.length > 0 ? resume.processingSteps : [
+                      { step: 'Uploading', status: 'Completed' },
+                      { step: 'Parsing', status: 'In Progress' },
+                      { step: 'Extracting Skills', status: 'Pending' },
+                      { step: 'Calculating ATS', status: 'Pending' },
+                      { step: 'Running AI Analysis', status: 'Pending' },
+                      { step: 'Saving Results', status: 'Pending' }
+                    ]).map((s, index) => {
+                      const isCompleted = s.status === 'Completed';
+                      const isInProgress = s.status === 'In Progress';
+                      const isFailed = s.status === 'Failed';
+
+                      let colorClass = 'text-slate-500';
+                      if (isCompleted || isInProgress) colorClass = 'text-white';
+                      if (isFailed) colorClass = 'text-brand-error';
+
+                      return (
+                        <div key={index} className={`relative pl-6 flex items-center justify-between ${colorClass}`}>
+                          <div className={`absolute left-[4.5px] w-2 h-2 rounded-full ${isCompleted ? 'bg-brand-success' : isInProgress ? 'bg-brand-primary animate-pulse' : isFailed ? 'bg-brand-error' : 'bg-slate-700'
+                            }`} />
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold">{s.step}</span>
+                            {isCompleted && s.duration > 0 && (
+                              <span className="text-[10px] text-slate-500 font-medium">({s.duration}ms)</span>
+                            )}
+                          </div>
+                          {isCompleted && <CheckCircle className="w-4 h-4 text-brand-success shrink-0" />}
+                          {isInProgress && <Loader className="w-4 h-4 text-brand-primary animate-spin shrink-0" />}
+                          {isFailed && <XCircle className="w-4 h-4 text-brand-error shrink-0" />}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
             ) : resume.status === 'Parsed' && resume.parsedData ? (
               <div className="space-y-6">
-                
+
                 {/* Developer Mode Raw Text View */}
                 {devMode && (
                   <motion.div
@@ -755,7 +819,7 @@ export default function ResumePage() {
                           <span>Duration: {resume.parsingLogs.duration} ms</span>
                         </div>
                       )}
-                      
+
                       <pre className="whitespace-pre-wrap font-mono text-[10px] text-slate-300 bg-brand-dark/80 p-4 rounded-xl max-h-[300px] overflow-y-auto border border-brand-border/80">
                         {resume.rawText || 'No text extracted.'}
                       </pre>
@@ -765,7 +829,7 @@ export default function ResumePage() {
 
                 {/* Structured JSON Cards */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-                  
+
                   {/* Left Column */}
                   <div className="lg:col-span-1 space-y-6">
                     {/* Personal Card */}
@@ -774,7 +838,7 @@ export default function ResumePage() {
                         <User className="w-4.5 h-4.5 text-brand-primary" />
                         <h3 className="text-xs font-extrabold text-white uppercase tracking-wider">Contact Information</h3>
                       </div>
-                      
+
                       <div className="space-y-4 text-xs">
                         <div className="space-y-1">
                           <span className="text-[9px] text-slate-500 font-bold uppercase block">Parsed Candidate Name</span>
@@ -810,7 +874,7 @@ export default function ResumePage() {
                         <Globe className="w-4.5 h-4.5 text-brand-primary" />
                         <h3 className="text-xs font-extrabold text-white uppercase tracking-wider">Links & Repositories</h3>
                       </div>
-                      
+
                       <div className="space-y-4 text-xs">
                         <div className="space-y-1">
                           <span className="text-[9px] text-slate-500 font-bold uppercase block">GitHub</span>
@@ -847,14 +911,14 @@ export default function ResumePage() {
 
                   {/* Right Columns */}
                   <div className="lg:col-span-2 space-y-6">
-                    
+
                     {/* Skills Tags Card */}
                     <div className="glass-panel p-6 rounded-2xl space-y-4">
                       <div className="flex items-center gap-2 border-b border-brand-border/40 pb-3">
                         <Code className="w-4.5 h-4.5 text-brand-primary" />
                         <h3 className="text-xs font-extrabold text-white uppercase tracking-wider">Skills Directory</h3>
                       </div>
-                      
+
                       <div className="flex flex-wrap gap-2 pt-1">
                         {resume.parsedData.skills?.map((skill, index) => (
                           <span key={index} className="px-3 py-1 bg-brand-primary/10 border border-brand-primary/20 text-brand-primary text-xs font-semibold rounded-full">
@@ -873,7 +937,7 @@ export default function ResumePage() {
                         <GraduationCap className="w-4.5 h-4.5 text-brand-primary" />
                         <h3 className="text-xs font-extrabold text-white uppercase tracking-wider">Education Records</h3>
                       </div>
-                      
+
                       <ul className="space-y-3.5 list-none pt-1">
                         {resume.parsedData.education?.map((edu, index) => (
                           <li key={index} className="text-xs text-slate-300 leading-relaxed border-l-2 border-brand-border/80 pl-3">
@@ -892,7 +956,7 @@ export default function ResumePage() {
                         <Layers className="w-4.5 h-4.5 text-brand-primary" />
                         <h3 className="text-xs font-extrabold text-white uppercase tracking-wider">Projects Summary</h3>
                       </div>
-                      
+
                       <ul className="space-y-3.5 list-none pt-1">
                         {resume.parsedData.projects?.map((proj, index) => (
                           <li key={index} className="text-xs text-slate-300 leading-relaxed border-l-2 border-brand-border/80 pl-3">
@@ -911,7 +975,7 @@ export default function ResumePage() {
                         <Briefcase className="w-4.5 h-4.5 text-brand-primary" />
                         <h3 className="text-xs font-extrabold text-white uppercase tracking-wider">Professional Experience</h3>
                       </div>
-                      
+
                       <ul className="space-y-3.5 list-none pt-1">
                         {resume.parsedData.experience?.map((exp, index) => (
                           <li key={index} className="text-xs text-slate-300 leading-relaxed border-l-2 border-brand-border/80 pl-3">
@@ -930,7 +994,7 @@ export default function ResumePage() {
                         <Award className="w-4.5 h-4.5 text-brand-primary" />
                         <h3 className="text-xs font-extrabold text-white uppercase tracking-wider">Certifications & Courses</h3>
                       </div>
-                      
+
                       <ul className="space-y-3.5 list-none pt-1">
                         {resume.parsedData.certifications?.map((cert, index) => (
                           <li key={index} className="text-xs text-slate-300 leading-relaxed border-l-2 border-brand-border/80 pl-3">
@@ -949,7 +1013,7 @@ export default function ResumePage() {
                         <Globe className="w-4.5 h-4.5 text-brand-primary" />
                         <h3 className="text-xs font-extrabold text-white uppercase tracking-wider">Languages</h3>
                       </div>
-                      
+
                       <div className="flex flex-wrap gap-2 pt-1">
                         {resume.parsedData.languages?.map((lang, index) => (
                           <span key={index} className="px-3 py-1 bg-brand-accent/10 border border-brand-accent/20 text-brand-accent text-xs font-semibold rounded-full">
@@ -968,7 +1032,7 @@ export default function ResumePage() {
                         <Award className="w-4.5 h-4.5 text-brand-primary" />
                         <h3 className="text-xs font-extrabold text-white uppercase tracking-wider">Achievements & Honors</h3>
                       </div>
-                      
+
                       <ul className="space-y-3.5 list-none pt-1">
                         {resume.parsedData.achievements?.map((ach, index) => (
                           <li key={index} className="text-xs text-slate-300 leading-relaxed border-l-2 border-brand-border/80 pl-3">
@@ -1037,7 +1101,7 @@ export default function ResumePage() {
                   <Target className="w-4.5 h-4.5 text-brand-primary" />
                   <h3 className="text-xs font-extrabold text-white uppercase tracking-wider">Company Job Description Profiles</h3>
                 </div>
-                
+
                 <button
                   onClick={() => setIsCreatingJd(true)}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-brand-primary hover:brightness-110 text-white text-xs font-bold rounded-lg transition-all cursor-pointer"
@@ -1053,44 +1117,44 @@ export default function ResumePage() {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-1">
                       <label className="text-[10px] text-slate-400 font-bold uppercase">JD Title / Position</label>
-                      <input 
-                        type="text" 
+                      <input
+                        type="text"
                         value={newJdTitle}
                         onChange={(e) => setNewJdTitle(e.target.value)}
-                        placeholder="e.g. SDE-1" 
-                        className="w-full p-2.5 rounded-lg border border-brand-border/80 bg-brand-dark text-white text-xs focus:border-brand-primary focus:outline-none"
+                        placeholder="e.g. SDE-1"
+                        className="w-full p-2.5 rounded-lg border border-brand-border/80 bg-brand-dark text-white text-xs focus-ring"
                       />
                     </div>
                     <div className="space-y-1">
                       <label className="text-[10px] text-slate-400 font-bold uppercase">Company Name</label>
-                      <input 
-                        type="text" 
+                      <input
+                        type="text"
                         value={newJdCompany}
                         onChange={(e) => setNewJdCompany(e.target.value)}
-                        placeholder="e.g. Google" 
-                        className="w-full p-2.5 rounded-lg border border-brand-border/80 bg-brand-dark text-white text-xs focus:border-brand-primary focus:outline-none"
+                        placeholder="e.g. Google"
+                        className="w-full p-2.5 rounded-lg border border-brand-border/80 bg-brand-dark text-white text-xs focus-ring"
                       />
                     </div>
                     <div className="space-y-1">
                       <label className="text-[10px] text-slate-400 font-bold uppercase">Target Role / Track</label>
-                      <input 
-                        type="text" 
+                      <input
+                        type="text"
                         value={newJdRole}
                         onChange={(e) => setNewJdRole(e.target.value)}
-                        placeholder="e.g. Full Stack Engineer" 
-                        className="w-full p-2.5 rounded-lg border border-brand-border/80 bg-brand-dark text-white text-xs focus:border-brand-primary focus:outline-none"
+                        placeholder="e.g. Full Stack Engineer"
+                        className="w-full p-2.5 rounded-lg border border-brand-border/80 bg-brand-dark text-white text-xs focus-ring"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-1">
                     <label className="text-[10px] text-slate-400 font-bold uppercase">Job Description Text</label>
-                    <textarea 
+                    <textarea
                       value={newJdText}
                       onChange={(e) => setNewJdText(e.target.value)}
-                      placeholder="Paste full job description requirements here..." 
+                      placeholder="Paste full job description requirements here..."
                       rows="4"
-                      className="w-full p-3 rounded-lg border border-brand-border/80 bg-brand-dark text-white text-xs focus:border-brand-primary focus:outline-none"
+                      className="w-full p-3 rounded-lg border border-brand-border/80 bg-brand-dark text-white text-xs focus-ring"
                     />
                   </div>
 
@@ -1120,7 +1184,7 @@ export default function ResumePage() {
                         <select
                           value={selectedJdId}
                           onChange={(e) => setSelectedJdId(e.target.value)}
-                          className="w-full p-3 rounded-xl border border-brand-border bg-brand-dark/80 text-white text-xs font-semibold focus:border-brand-primary focus:outline-none"
+                          className="w-full p-3 rounded-xl border border-brand-border bg-brand-dark/80 text-white text-xs font-semibold focus-ring"
                         >
                           {jobDescriptions.map(jd => (
                             <option key={jd._id} value={jd._id}>
@@ -1154,7 +1218,7 @@ export default function ResumePage() {
                         onChange={(e) => setEditingJdText(e.target.value)}
                         placeholder="Job Description description text..."
                         rows="4"
-                        className="w-full p-4 rounded-xl border border-brand-border/60 bg-brand-dark/50 text-slate-200 text-xs font-medium focus:border-brand-primary focus:outline-none transition-all"
+                        className="w-full p-4 rounded-xl border border-brand-border/60 bg-brand-dark/50 text-slate-200 text-xs font-medium focus-ring transition-all"
                       />
                     </div>
                   )}
@@ -1166,7 +1230,7 @@ export default function ResumePage() {
             {selectedJd && (
               <div className="glass-panel p-6 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-r from-brand-primary/5 via-brand-secondary/5 to-transparent pointer-events-none" />
-                
+
                 <div className="flex items-center gap-4.5 min-w-0 flex-1">
                   <div className="p-4 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 rounded-2xl shrink-0">
                     <Sparkles className="w-7 h-7" />
@@ -1227,8 +1291,8 @@ export default function ResumePage() {
 
             {/* Analyzing loading state screens */}
             {analyzing ? (
-              <div className="space-y-6">
-                <div className="glass-panel p-8 rounded-2xl text-center space-y-4 min-h-[300px] flex flex-col items-center justify-center">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="lg:col-span-2 glass-panel p-8 rounded-2xl text-center space-y-4 min-h-[300px] flex flex-col items-center justify-center">
                   <Loader className="w-10 h-10 text-brand-primary animate-spin mx-auto" />
                   <div>
                     <h4 className="text-sm font-bold text-white uppercase tracking-wider">Gemini Auditing Active...</h4>
@@ -1237,33 +1301,272 @@ export default function ResumePage() {
                     </p>
                   </div>
                 </div>
+
+                <div className="glass-panel p-6 rounded-2xl space-y-5">
+                  <div className="flex items-center gap-2 border-b border-brand-border/40 pb-3">
+                    <Activity className="w-4.5 h-4.5 text-brand-primary" />
+                    <h3 className="text-xs font-extrabold text-white uppercase tracking-wider">Audit Progress</h3>
+                  </div>
+
+                  <div className="space-y-4.5 text-xs relative before:absolute before:left-2 before:top-2 before:bottom-2 before:w-[1px] before:bg-brand-border">
+                    {(resume?.processingSteps && resume.processingSteps.length > 0 ? resume.processingSteps : [
+                      { step: 'Uploading', status: 'Completed' },
+                      { step: 'Parsing', status: 'Completed' },
+                      { step: 'Extracting Skills', status: 'Completed' },
+                      { step: 'Calculating ATS', status: 'Completed' },
+                      { step: 'Running AI Analysis', status: 'In Progress' },
+                      { step: 'Saving Results', status: 'Pending' }
+                    ]).map((s, index) => {
+                      const isCompleted = s.status === 'Completed';
+                      const isInProgress = s.status === 'In Progress';
+                      const isFailed = s.status === 'Failed';
+
+                      let colorClass = 'text-slate-500';
+                      if (isCompleted || isInProgress) colorClass = 'text-white';
+                      if (isFailed) colorClass = 'text-brand-error';
+
+                      return (
+                        <div key={index} className={`relative pl-6 flex items-center justify-between ${colorClass}`}>
+                          <div className={`absolute left-[4.5px] w-2 h-2 rounded-full ${isCompleted ? 'bg-brand-success' : isInProgress ? 'bg-brand-primary animate-pulse' : isFailed ? 'bg-brand-error' : 'bg-slate-700'
+                            }`} />
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold">{s.step}</span>
+                            {isCompleted && s.duration > 0 && (
+                              <span className="text-[10px] text-slate-500 font-medium">({s.duration}ms)</span>
+                            )}
+                          </div>
+                          {isCompleted && <CheckCircle className="w-4 h-4 text-brand-success shrink-0" />}
+                          {isInProgress && <Loader className="w-4 h-4 text-brand-primary animate-spin shrink-0" />}
+                          {isFailed && <XCircle className="w-4 h-4 text-brand-error shrink-0" />}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
             ) : selectedJd && selectedJd.aiAnalysisStatus === 'Analyzed' && selectedJd.aiAnalysisData ? (
               /* Audited Dashboard grid */
               <div className="space-y-8">
-                
+
+                {resume?.version > 1 && (
+                  <div className="flex justify-between items-center bg-[#05080e]/40 border border-brand-border/60 p-4 rounded-xl">
+                    <div>
+                      <span className="text-[10px] font-bold text-brand-primary uppercase tracking-widest block">Version Control</span>
+                      <span className="text-[11px] text-slate-300">You are viewing <strong>v{resume.version}</strong> of this profile. Evolution diffs are available.</span>
+                    </div>
+                    <button
+                      onClick={() => setShowComparison(prev => !prev)}
+                      className="px-4 py-2 bg-brand-primary/10 border border-brand-primary/20 hover:bg-brand-primary/20 text-brand-primary text-xs font-bold rounded-xl shadow-md transition-all cursor-pointer flex items-center gap-2"
+                    >
+                      <Sparkles className="w-4 h-4" />
+                      {showComparison ? 'Hide Version Diffs' : 'Compare Version Evolution'}
+                    </button>
+                  </div>
+                )}
+
+                {showComparison && (
+                  <ResumeCompare onClose={() => setShowComparison(false)} />
+                )}
+
+                {/* Visual Insights Cards Grid */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+
+                  {/* ATS Score Card with Health Meter */}
+                  <div className="glass-panel p-6 rounded-2xl flex flex-col justify-between space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] text-slate-400 font-bold uppercase block">ATS Score</span>
+                      <Activity className="w-4 h-4 text-brand-primary" />
+                    </div>
+                    <div className="space-y-1">
+                      <div className="text-3xl font-black text-white">{resume?.atsScore || 0}%</div>
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold border ${getHealthBadgeStyles(resume?.resumeHealth || 'Average')}`}>
+                        {getHealthBadgeStars(resume?.resumeHealth || 'Average')}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Resume Quality Card */}
+                  <div className="glass-panel p-6 rounded-2xl flex flex-col justify-between space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] text-slate-400 font-bold uppercase block">Resume Quality</span>
+                      <Layers className="w-4 h-4 text-brand-secondary" />
+                    </div>
+                    <div className="space-y-1">
+                      <div className="text-3xl font-black text-white">{resume?.resumeQuality || 0}%</div>
+                      <span className="text-[9px] text-slate-400 font-medium">Completeness & Style</span>
+                    </div>
+                  </div>
+
+                  {/* Keyword Coverage Card */}
+                  <div className="glass-panel p-6 rounded-2xl flex flex-col justify-between space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] text-slate-400 font-bold uppercase block">Keyword Coverage</span>
+                      <Target className="w-4 h-4 text-indigo-400" />
+                    </div>
+                    <div className="space-y-1">
+                      <div className="text-3xl font-black text-white">
+                        {selectedJd.aiAnalysisData.atsAnalysis?.keywordMatch === 'High' ? '92%' : selectedJd.aiAnalysisData.atsAnalysis?.keywordMatch === 'Medium' ? '70%' : '45%'}
+                      </div>
+                      <span className="text-[9px] text-slate-400 font-medium">Match: {selectedJd.aiAnalysisData.atsAnalysis?.keywordMatch || 'Medium'}</span>
+                    </div>
+                  </div>
+
+                  {/* AI Match Confidence Card */}
+                  <div className="glass-panel p-6 rounded-2xl flex flex-col justify-between space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] text-slate-400 font-bold uppercase block">AI Match Confidence</span>
+                      <Sparkles className="w-4 h-4 text-brand-success" />
+                    </div>
+                    <div className="space-y-1">
+                      <div className="text-3xl font-black text-white">
+                        {selectedJd.aiAnalysisData.confidence || 85}%
+                      </div>
+                      <span className="text-[9px] text-slate-400 font-medium">LLM Audit Alignment</span>
+                    </div>
+                  </div>
+
+                </div>
+
+                {/* Section Scores & Checklist Grid */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+                  {/* Left: Section Scores */}
+                  <div className="lg:col-span-2 glass-panel p-6 rounded-2xl space-y-5">
+                    <div className="flex items-center gap-2 border-b border-brand-border/40 pb-3">
+                      <Layers className="w-4.5 h-4.5 text-brand-primary" />
+                      <h3 className="text-xs font-extrabold text-white uppercase tracking-wider">Detailed Section Scores</h3>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
+                      {[
+                        { label: 'Contact Information', key: 'contactInformation' },
+                        { label: 'Summary', key: 'summary' },
+                        { label: 'Education', key: 'education' },
+                        { label: 'Projects', key: 'projects' },
+                        { label: 'Experience', key: 'experience' },
+                        { label: 'Skills', key: 'skills' },
+                        { label: 'Certifications', key: 'certifications' },
+                        { label: 'Achievements', key: 'achievements' }
+                      ].map((item) => {
+                        const val = resume?.sectionScores?.[item.key] || 0;
+                        let barColor = 'bg-brand-primary';
+                        if (val >= 90) barColor = 'bg-emerald-500';
+                        else if (val >= 70) barColor = 'bg-brand-primary';
+                        else if (val >= 50) barColor = 'bg-amber-500';
+                        else barColor = 'bg-red-500';
+
+                        return (
+                          <div key={item.key} className="space-y-1 text-xs">
+                            <div className="flex justify-between font-medium">
+                              <span className="text-slate-300">{item.label}</span>
+                              <span className="text-white font-bold">{val}%</span>
+                            </div>
+                            <div className="w-full bg-brand-dark/80 h-2 rounded-full overflow-hidden border border-brand-border/50">
+                              <div className={`h-full ${barColor} transition-all duration-500`} style={{ width: `${val}%` }} />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Right: ATS Checklist */}
+                  <div className="lg:col-span-1 glass-panel p-6 rounded-2xl space-y-5">
+                    <div className="flex items-center gap-2 border-b border-brand-border/40 pb-3">
+                      <CheckCircle className="w-4.5 h-4.5 text-brand-success" />
+                      <h3 className="text-xs font-extrabold text-white uppercase tracking-wider">Recruiter ATS Checklist</h3>
+                    </div>
+
+                    <div className="space-y-2.5 text-xs text-slate-300">
+                      {[
+                        { label: 'Email found', flag: resume?.atsChecklist?.emailFound },
+                        { label: 'Phone found', flag: resume?.atsChecklist?.phoneFound },
+                        { label: 'LinkedIn profile', flag: resume?.atsChecklist?.linkedinFound },
+                        { label: 'GitHub repository', flag: resume?.atsChecklist?.githubFound },
+                        { label: 'Education listings', flag: resume?.atsChecklist?.educationFound },
+                        { label: 'Projects details', flag: resume?.atsChecklist?.projectsFound },
+                        { label: 'Skills tags density', flag: resume?.atsChecklist?.skillsFound },
+                        { label: 'Structured bullet points', flag: resume?.atsChecklist?.bulletPointsFound },
+                        { label: 'Action verbs matching', flag: resume?.atsChecklist?.actionVerbsFound },
+                        { label: 'Certifications presence', flag: !resume?.atsChecklist?.certificationsMissing },
+                        { label: 'Portfolio link', flag: !resume?.atsChecklist?.portfolioMissing },
+                        { label: 'Achievements listed', flag: !resume?.atsChecklist?.achievementsMissing }
+                      ].map((item, idx) => (
+                        <div key={idx} className="flex items-center justify-between">
+                          <span className="font-semibold text-slate-400">{item.label}</span>
+                          {item.flag ? (
+                            <span className="text-emerald-400 font-black">✔</span>
+                          ) : (
+                            <span className="text-red-400 font-black">✘</span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                </div>
+
+                {/* File Statistics Widget */}
+                <div className="glass-panel p-6 rounded-2xl space-y-4">
+                  <div className="flex items-center gap-2 border-b border-brand-border/40 pb-3">
+                    <FileText className="w-4.5 h-4.5 text-brand-primary" />
+                    <h3 className="text-xs font-extrabold text-white uppercase tracking-wider">File & Parsing Statistics</h3>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6 text-xs text-slate-300">
+                    <div>
+                      <span className="text-[8px] text-slate-500 font-bold uppercase block">Resume Name</span>
+                      <span className="text-slate-200 font-semibold truncate block" title={resume?.originalFileName}>{resume?.originalFileName}</span>
+                    </div>
+                    <div>
+                      <span className="text-[8px] text-slate-500 font-bold uppercase block">File Size</span>
+                      <span className="text-slate-200 font-semibold">{formatBytes(resume?.fileSize || 0)}</span>
+                    </div>
+                    <div>
+                      <span className="text-[8px] text-slate-500 font-bold uppercase block">Pages</span>
+                      <span className="text-slate-200 font-semibold">{resume?.parsedData?.metadata?.pageCount || 1}</span>
+                    </div>
+                    <div>
+                      <span className="text-[8px] text-slate-500 font-bold uppercase block">Word Count</span>
+                      <span className="text-slate-200 font-semibold">{resume?.parsedData?.metadata?.wordCount || 0}</span>
+                    </div>
+                    <div>
+                      <span className="text-[8px] text-slate-500 font-bold uppercase block">Character Count</span>
+                      <span className="text-slate-200 font-semibold">{resume?.parsedData?.metadata?.charCount || 0}</span>
+                    </div>
+                    <div>
+                      <span className="text-[8px] text-slate-500 font-bold uppercase block">Sections Found</span>
+                      <span className="text-slate-200 font-semibold">{(resume?.parsedData?.metadata?.sectionsFound || []).length || 0}</span>
+                    </div>
+                    <div>
+                      <span className="text-[8px] text-slate-500 font-bold uppercase block">Version</span>
+                      <span className="text-slate-200 font-semibold">v{resume?.version || 1}</span>
+                    </div>
+                    <div>
+                      <span className="text-[8px] text-slate-500 font-bold uppercase block">Last Analyzed</span>
+                      <span className="text-slate-200 font-semibold">{resume?.lastAnalyzed ? new Date(resume.lastAnalyzed).toLocaleDateString() : 'N/A'}</span>
+                    </div>
+                    <div>
+                      <span className="text-[8px] text-slate-500 font-bold uppercase block">Readability Score</span>
+                      <span className="text-slate-200 font-semibold">{resume?.parsedData?.metadata?.readability || 70}%</span>
+                    </div>
+                    <div>
+                      <span className="text-[8px] text-slate-500 font-bold uppercase block">Completeness</span>
+                      <span className="text-slate-200 font-semibold">{resume?.parsedData?.metadata?.completeness || 80}%</span>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Overall Feedback Banner */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                  
+                <div className="grid grid-cols-1 gap-6">
+
                   {/* Summary Card */}
-                  <div className="md:col-span-3 glass-panel p-6 rounded-2xl space-y-3 relative overflow-hidden">
+                  <div className="glass-panel p-6 rounded-2xl space-y-3 relative overflow-hidden">
                     <div className="absolute inset-0 bg-gradient-to-r from-brand-primary/5 via-transparent to-transparent" />
                     <h3 className="text-xs font-extrabold text-white uppercase tracking-wider">AI Executive Summary</h3>
                     <p className="text-xs text-slate-300 leading-relaxed">
                       {selectedJd.aiAnalysisData.resumeSummary}
                     </p>
-                  </div>
-
-                  {/* Confidence circular meter */}
-                  <div className="md:col-span-1 glass-panel p-6 rounded-2xl text-center flex flex-col items-center justify-center space-y-2">
-                    <span className="text-[10px] text-slate-400 font-bold uppercase block">Match Confidence</span>
-                    <div className="relative w-20 h-20 flex items-center justify-center">
-                      <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-                        <path className="text-brand-dark/40" strokeWidth="2.5" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                        <path className="text-brand-primary" strokeDasharray={`${selectedJd.aiAnalysisData.confidence}, 100`} strokeWidth="2.5" strokeLinecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                      </svg>
-                      <span className="absolute text-sm font-black text-white">{selectedJd.aiAnalysisData.confidence}%</span>
-                    </div>
                   </div>
 
                 </div>
@@ -1296,7 +1599,7 @@ export default function ResumePage() {
 
                 {/* Strengths and Weaknesses */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  
+
                   {/* Strengths Card */}
                   <div className="glass-panel p-6 rounded-2xl space-y-4">
                     <div className="flex items-center gap-2 border-b border-brand-border/40 pb-3">
@@ -1331,7 +1634,7 @@ export default function ResumePage() {
 
                 {/* Skill gaps and Recommended technologies */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  
+
                   {/* Missing Skills Card */}
                   <div className="glass-panel p-6 rounded-2xl space-y-4">
                     <div className="flex items-center gap-2 border-b border-brand-border/40 pb-3">
@@ -1366,7 +1669,7 @@ export default function ResumePage() {
 
                 {/* Recommended Certifications, Career Progression & Improvements */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                  
+
                   {/* Certifications Card */}
                   <div className="glass-panel p-6 rounded-2xl space-y-4">
                     <div className="flex items-center gap-2 border-b border-brand-border/40 pb-3">
@@ -1405,9 +1708,30 @@ export default function ResumePage() {
                     </div>
                     <ul className="space-y-3.5 list-none">
                       {selectedJd.aiAnalysisData.improvementSuggestions?.map((sug, i) => (
-                        <li key={i} className="text-xs text-slate-300 leading-relaxed border-l-2 border-brand-primary/60 pl-3">
-                          {sug}
-                        </li>
+                        <div
+                          key={i}
+                          className="border border-brand-border/40 rounded-xl p-4 space-y-3"
+                        >
+                          <div>
+                            <span className="text-red-400 text-[10px] font-bold uppercase">
+                              Original
+                            </span>
+
+                            <p className="text-xs text-slate-300 mt-1">
+                              {sug.original}
+                            </p>
+                          </div>
+
+                          <div>
+                            <span className="text-emerald-400 text-[10px] font-bold uppercase">
+                              Recommended
+                            </span>
+
+                            <p className="text-xs text-slate-200 mt-1">
+                              {sug.recommended}
+                            </p>
+                          </div>
+                        </div>
                       ))}
                     </ul>
                   </div>
@@ -1420,7 +1744,7 @@ export default function ResumePage() {
                     <Target className="w-4.5 h-4.5 text-brand-primary" />
                     <h3 className="text-xs font-extrabold text-white uppercase tracking-wider">ATS Layout & Keyword Audit</h3>
                   </div>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs text-slate-300">
                     <div className="space-y-1">
                       <span className="text-[9px] text-slate-500 font-bold uppercase block">Keyword Matching Density</span>
@@ -1446,6 +1770,25 @@ export default function ResumePage() {
                   <p className="text-xs text-slate-300 leading-relaxed italic">
                     "{selectedJd.aiAnalysisData.overallFeedback}"
                   </p>
+                </div>
+
+                {/* Future Integration roadmap banner */}
+                <div className="glass-panel p-6 rounded-2xl bg-brand-primary/5 border border-brand-primary/20 relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-r from-brand-primary/10 via-transparent to-transparent pointer-events-none" />
+                  <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div className="space-y-2">
+                      <h4 className="text-xs font-extrabold text-white uppercase tracking-wider flex items-center gap-1.5">
+                        <Sparkles className="w-4.5 h-4.5 text-brand-primary animate-pulse" />
+                        Future Platform Integration
+                      </h4>
+                      <p className="text-xs text-slate-400 max-w-3xl leading-relaxed">
+                        This parsed resume serves as the unified database core for the entire platform. Upcoming updates will reuse this profile data for the <strong>Career Mentor</strong>, <strong>Mock Interviews</strong>, <strong>Coding Practice</strong>, <strong>MCQ Practice</strong>, <strong>Company-wise Preparation</strong>, <strong>Salary Prediction</strong>, and <strong>Roadmap Generator</strong> instantly with zero friction.
+                      </p>
+                    </div>
+                    <span className="shrink-0 text-[10px] font-bold text-brand-primary bg-brand-primary/10 px-3.5 py-2 rounded-xl border border-brand-primary/20">
+                      Module Integrator Enabled
+                    </span>
+                  </div>
                 </div>
 
               </div>
@@ -1497,7 +1840,7 @@ export default function ResumePage() {
           </motion.div>
         )}
       </AnimatePresence>
-      
+
     </div>
   );
 }

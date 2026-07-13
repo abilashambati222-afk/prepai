@@ -117,7 +117,8 @@ export const AuthProvider = ({ children }) => {
     login: loginUser,
     register: registerUser,
     logout: logoutUser,
-    setError
+    setError,
+    updateUser: (updatedUser) => setUser(updatedUser)
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

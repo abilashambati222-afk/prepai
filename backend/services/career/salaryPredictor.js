@@ -44,36 +44,51 @@ exports.predictSalary = (parsedData, userProfile, careerScore = 0, geminiExplana
     (exp.description || '').toLowerCase().includes('intern')
   );
 
-  if (skillsCount >= 10) {
-    confidenceReasons.push('Strong technical skills inventory');
-  } else if (skillsCount < 6) {
-    confidenceReasons.push('Needs to expand tool/language breadth');
-  }
-
   const projectsCount = parsedData?.projects?.length || 0;
-  if (projectsCount >= 2) {
-    confidenceReasons.push('Good projects portfolio');
+  if (projectsCount >= 3) {
+    confidenceReasons.push('Strong Projects');
+  } else if (projectsCount === 2) {
+    confidenceReasons.push('Good Projects');
   } else {
-    confidenceReasons.push('Weak projects profile');
+    confidenceReasons.push('Weak Projects');
   }
 
   if (experienceLevel === 'Student' || experienceLevel === 'Fresher') {
     if (hasInternship) {
-      confidenceReasons.push('Demonstrates internship experience');
+      confidenceReasons.push('Strong Internship');
     } else {
-      confidenceReasons.push('Weak internship profile');
+      confidenceReasons.push('No Internship');
     }
   }
 
-  const certsText = (parsedData?.certifications || []).map(c => (c.name || c.title || c).toLowerCase()).join(' ');
-  const hasCloudCert = ['aws', 'azure', 'gcp', 'google cloud', 'kubernetes', 'cka'].some(kw => certsText.includes(kw));
-  if (hasCloudCert) {
-    confidenceReasons.push('Holds verified cloud credentials');
+  const skillsList = parsedData?.skills || [];
+  const hasCloudSkills = skillsList.some(s => 
+    ['aws', 'azure', 'gcp', 'google cloud', 'cloud', 'docker', 'kubernetes', 'k8s', 'terraform'].some(kw => s.toLowerCase().includes(kw))
+  );
+  if (hasCloudSkills) {
+    confidenceReasons.push('Good Cloud Skills');
   } else {
-    confidenceReasons.push('No cloud certifications');
+    confidenceReasons.push('Weak Cloud Skills');
   }
 
-  const confidence = skillsCount >= 10 ? 'High' : skillsCount >= 5 ? 'Medium' : 'Low';
+  if (careerScore >= 80) {
+    confidenceReasons.push('Strong Resume');
+  } else if (careerScore >= 50) {
+    confidenceReasons.push('Good Resume');
+  } else {
+    confidenceReasons.push('Weak Resume');
+  }
+
+  const hasSysDesign = skillsList.some(s => 
+    ['system design', 'architecture', 'scalability', 'microservices', 'load balancer', 'caching', 'redis', 'kafka'].some(kw => s.toLowerCase().includes(kw))
+  );
+  if (hasSysDesign) {
+    confidenceReasons.push('Good System Design');
+  } else {
+    confidenceReasons.push('Missing System Design');
+  }
+
+  const confidence = careerScore >= 85 ? 'High' : careerScore >= 50 ? 'Medium' : 'Low';
 
   return {
     currentSalaryMin: Math.round(currentSalaryMin * 10) / 10,

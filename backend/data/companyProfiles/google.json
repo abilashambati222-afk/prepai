@@ -1,7 +1,7 @@
 {
   "company": "Google",
   "role": "Software Engineer",
-  "minimumCGPA": 8.5,
+  "minimumCGPA": 8,
   "requiredSkills": [
     "DSA",
     "Java",
@@ -30,5 +30,9 @@
   "systemDesignRequired": true,
   "dsaLevel": "Advanced",
   "communicationWeight": 10,
-  "leadershipWeight": 5
+  "leadershipWeight": 5,
+  "cloudWeight": 10,
+  "backendWeight": 15,
+  "frontendWeight": 5,
+  "resumeWeight": 10
 }

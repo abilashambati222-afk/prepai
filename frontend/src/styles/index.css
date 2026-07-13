@@ -73,3 +73,23 @@
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+
+.text-gradient-animate {
+  background: linear-gradient(135deg, var(--color-brand-primary), var(--color-brand-secondary), var(--color-brand-accent), var(--color-brand-primary));
+  background-size: 300% 300%;
+  animation: gradient-shift 8s ease infinite;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Custom interactive inputs & focus helpers */
+.focus-ring {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.focus-ring:focus-within, .focus-ring:focus {
+  border-color: var(--color-brand-primary);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+  outline: none;
+}
+

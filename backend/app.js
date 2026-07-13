@@ -10,6 +10,8 @@ const profileRoutes = require('./routes/profileRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
 const resumeRoutes = require('./routes/resumeRoutes');
 const jobDescriptionRoutes = require('./routes/jobDescriptionRoutes');
+const careerRoutes = require('./routes/careerRoutes');
+const interviewRoutes = require('./routes/interviewRoutes');
 const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
@@ -72,6 +74,12 @@ app.use('/api/v1/resume', resumeRoutes);
 
 // Mount Job Description Router
 app.use('/api/v1/job-descriptions', jobDescriptionRoutes);
+
+// Mount Career Router
+app.use('/api/v1/career', careerRoutes);
+
+// Mount Interview Router
+app.use('/api/v1/interview', interviewRoutes);
 
 // Fallback Route Handler (404)
 app.use((req, res) => {

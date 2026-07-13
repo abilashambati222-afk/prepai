@@ -4,17 +4,16 @@ import { useForm } from 'react-hook-form';
 import { useAuth } from '../context/AuthContext';
 import api from '../lib/api';
 import { useToast } from '../components/Toast';
-import { 
-  User, 
-  GraduationCap, 
-  Briefcase, 
-  Code, 
-  Settings, 
-  Save, 
-  Loader, 
-  ArrowLeft, 
-  Plus, 
-  X 
+import {
+  GraduationCap,
+  Briefcase,
+  Code,
+  Settings,
+  Save,
+  Loader,
+  ArrowLeft,
+  Plus,
+  X
 } from 'lucide-react';
 
 const TABS = [
@@ -25,7 +24,7 @@ const TABS = [
 ];
 
 export default function EditProfilePage() {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const { showToast } = useToast();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('education');
@@ -54,6 +53,7 @@ export default function EditProfilePage() {
     register,
     handleSubmit,
     setValue,
+    reset,
     formState: { errors }
   } = useForm({
     defaultValues: {
@@ -65,6 +65,8 @@ export default function EditProfilePage() {
       graduationYear: user?.graduationYear || '',
       cgpa: user?.cgpa || '',
       targetRole: user?.targetRole || '',
+      targetCompany: user?.targetCompany || '',
+      targetTimeline: user?.targetTimeline || '',
       experienceLevel: user?.experienceLevel || 'Student',
       github: user?.github || '',
       linkedin: user?.linkedin || '',
@@ -75,10 +77,42 @@ export default function EditProfilePage() {
     }
   });
 
+  // Sync form state when user data is asynchronously loaded or updated
+  useEffect(() => {
+    if (user) {
+      reset({
+        fullName: user.fullName || '',
+        phone: user.phone || '',
+        college: user.college || '',
+        degree: user.degree || '',
+        branch: user.branch || '',
+        graduationYear: user.graduationYear || '',
+        cgpa: user.cgpa || '',
+        targetRole: user.targetRole || '',
+        targetCompany: user.targetCompany || '',
+        targetTimeline: user.targetTimeline || '',
+        experienceLevel: user.experienceLevel || 'Student',
+        github: user.github || '',
+        linkedin: user.linkedin || '',
+        portfolio: user.portfolio || '',
+        dailyGoal: user.dailyGoal || 5,
+        preferredDifficulty: user.preferredDifficulty || 'Medium',
+        notificationsEnabled: user.notificationsEnabled !== false
+      });
+      setSkills({
+        programmingLanguages: user.programmingLanguages || [],
+        frameworks: user.frameworks || [],
+        databases: user.databases || [],
+        tools: user.tools || []
+      });
+      setPreferredCompanies(user.preferredCompanies || []);
+    }
+  }, [user, reset]);
+
   const handleAddTag = (category, inputKey) => {
     const val = inputVal[inputKey].trim();
     if (!val) return;
-    
+
     if (category === 'companies') {
       if (!preferredCompanies.includes(val)) {
         setPreferredCompanies(prev => [...prev, val]);
@@ -106,7 +140,11 @@ export default function EditProfilePage() {
   };
 
   const onSubmit = async (data) => {
+    console.log("SUBMIT WORKING");
+    console.log(data);
+
     setIsSubmitting(true);
+
     try {
       const payload = {
         ...data,
@@ -120,14 +158,52 @@ export default function EditProfilePage() {
         dailyGoal: Number(data.dailyGoal)
       };
 
-      const response = await api.put('/profile', payload);
+      console.log("PAYLOAD", payload);
+
+      const response = await api.put("/profile", payload);
+
+      console.log(response);
+
       if (response.data?.success) {
-        showToast('Profile updated successfully!', 'success');
-        // Refresh local session user profile
-        window.location.reload();
+        showToast("Profile updated successfully!", "success");
+        updateUser(response.data.data.user);
       }
     } catch (err) {
-      showToast(err.message || 'Failed to update profile.', 'error');
+      console.error(err);
+      const FIELD_TO_TAB = {
+        fullName: 'education',
+        phone: 'education',
+        college: 'education',
+        degree: 'education',
+        branch: 'education',
+        graduationYear: 'education',
+        cgpa: 'education',
+        targetRole: 'career',
+        experienceLevel: 'career',
+        targetCompany: 'career',
+        targetTimeline: 'career',
+        github: 'settings',
+        linkedin: 'settings',
+        portfolio: 'settings',
+        dailyGoal: 'settings',
+        preferredDifficulty: 'settings',
+        notificationsEnabled: 'settings'
+      };
+
+      if (err.errors && err.errors.length > 0) {
+        const firstErr = err.errors[0];
+        const fieldName = firstErr.field;
+        if (fieldName && FIELD_TO_TAB[fieldName]) {
+          const targetTab = FIELD_TO_TAB[fieldName];
+          setActiveTab(targetTab);
+          const tabName = TABS.find(t => t.id === targetTab)?.name || targetTab;
+          showToast(`${firstErr.message} (in ${tabName})`, "error");
+        } else {
+          showToast(firstErr.message || "Failed to update profile.", "error");
+        }
+      } else {
+        showToast(err.message || "Failed to update profile.", "error");
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -137,7 +213,7 @@ export default function EditProfilePage() {
     <div className="space-y-8 w-full max-w-4xl mx-auto">
       {/* Page Header */}
       <div className="flex items-center gap-4 border-b border-brand-border/60 pb-5">
-        <Link 
+        <Link
           to="/profile"
           className="p-2 bg-white/5 hover:bg-white/10 rounded-xl text-slate-400 hover:text-white transition-all"
         >
@@ -160,11 +236,10 @@ export default function EditProfilePage() {
                 key={tab.id}
                 type="button"
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2.5 px-4 py-3 rounded-xl text-xs font-bold transition-all border shrink-0 cursor-pointer ${
-                  isActive 
-                    ? 'bg-brand-primary/10 border-brand-primary/30 text-white' 
-                    : 'text-slate-400 hover:text-slate-200 border-transparent hover:bg-white/5'
-                }`}
+                className={`flex items-center gap-2.5 px-4 py-3 rounded-xl text-xs font-bold transition-all border shrink-0 cursor-pointer ${isActive
+                  ? 'bg-brand-primary/10 border-brand-primary/30 text-white'
+                  : 'text-slate-400 hover:text-slate-200 border-transparent hover:bg-white/5'
+                  }`}
               >
                 <Icon className="w-4.5 h-4.5" />
                 <span>{tab.name}</span>
@@ -174,25 +249,61 @@ export default function EditProfilePage() {
         </div>
 
         {/* Right Side: Tab Form Panel */}
-        <form onSubmit={handleSubmit(onSubmit)} className="md:col-span-3 glass-panel p-6 md:p-8 rounded-2xl space-y-6">
-          
+        <form
+          onSubmit={handleSubmit(
+            onSubmit,
+            (errors) => {
+              console.log("Validation errors:", errors);
+              const FIELD_TO_TAB = {
+                fullName: 'education',
+                phone: 'education',
+                college: 'education',
+                degree: 'education',
+                branch: 'education',
+                graduationYear: 'education',
+                cgpa: 'education',
+                targetRole: 'career',
+                experienceLevel: 'career',
+                targetCompany: 'career',
+                targetTimeline: 'career',
+                github: 'settings',
+                linkedin: 'settings',
+                portfolio: 'settings',
+                dailyGoal: 'settings',
+                preferredDifficulty: 'settings',
+                notificationsEnabled: 'settings'
+              };
+              const firstErrorField = Object.keys(errors)[0];
+              if (firstErrorField && FIELD_TO_TAB[firstErrorField]) {
+                const targetTab = FIELD_TO_TAB[firstErrorField];
+                setActiveTab(targetTab);
+                const tabName = TABS.find(t => t.id === targetTab)?.name || targetTab;
+                showToast(`Please check errors in the ${tabName} tab.`, "error");
+              } else {
+                showToast("Please correct the form errors before saving.", "error");
+              }
+            }
+          )}
+          className="md:col-span-3 glass-panel p-6 md:p-8 rounded-2xl space-y-6"
+        >
+
           {/* Tab 1: Personal & Education */}
           {activeTab === 'education' && (
             <div className="space-y-4">
               <h3 className="text-sm font-bold text-white border-b border-brand-border/40 pb-2">Academic Profile</h3>
-              
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-slate-300">Full Name</label>
-                  <input 
+                  <input
                     type="text"
                     {...register('fullName', { required: 'Full name is required.' })}
-                    className="w-full bg-[#0d1222]/80 border border-brand-border focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 rounded-xl py-2.5 px-4 text-xs text-white placeholder-slate-500 outline-none"
+                    className="w-full bg-[#0d1222]/80 border border-brand-border focus-ring rounded-xl py-2.5 px-4 text-xs text-white placeholder-slate-500 outline-none"
                   />
                 </div>
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-slate-300">Phone Number</label>
-                  <input 
+                  <input
                     type="text"
                     {...register('phone', {
                       pattern: {
@@ -200,7 +311,7 @@ export default function EditProfilePage() {
                         message: 'Invalid phone number format.'
                       }
                     })}
-                    className="w-full bg-[#0d1222]/80 border border-brand-border focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 rounded-xl py-2.5 px-4 text-xs text-white placeholder-slate-500 outline-none"
+                    className="w-full bg-[#0d1222]/80 border border-brand-border focus-ring rounded-xl py-2.5 px-4 text-xs text-white placeholder-slate-500 outline-none"
                   />
                 </div>
               </div>
@@ -208,18 +319,18 @@ export default function EditProfilePage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-slate-300">College / University</label>
-                  <input 
+                  <input
                     type="text"
                     {...register('college', { required: 'College is required.' })}
-                    className="w-full bg-[#0d1222]/80 border border-brand-border focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 rounded-xl py-2.5 px-4 text-xs text-white placeholder-slate-500 outline-none"
+                    className="w-full bg-[#0d1222]/80 border border-brand-border focus-ring rounded-xl py-2.5 px-4 text-xs text-white placeholder-slate-500 outline-none"
                   />
                 </div>
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-slate-300">Degree</label>
-                  <input 
+                  <input
                     type="text"
                     {...register('degree', { required: 'Degree is required.' })}
-                    className="w-full bg-[#0d1222]/80 border border-brand-border focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 rounded-xl py-2.5 px-4 text-xs text-white placeholder-slate-500 outline-none"
+                    className="w-full bg-[#0d1222]/80 border border-brand-border focus-ring rounded-xl py-2.5 px-4 text-xs text-white placeholder-slate-500 outline-none"
                   />
                 </div>
               </div>
@@ -227,32 +338,32 @@ export default function EditProfilePage() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-slate-300">Branch / Specialization</label>
-                  <input 
+                  <input
                     type="text"
                     {...register('branch', { required: 'Branch is required.' })}
-                    className="w-full bg-[#0d1222]/80 border border-brand-border focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 rounded-xl py-2.5 px-4 text-xs text-white placeholder-slate-500 outline-none"
+                    className="w-full bg-[#0d1222]/80 border border-brand-border focus-ring rounded-xl py-2.5 px-4 text-xs text-white placeholder-slate-500 outline-none"
                   />
                 </div>
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-slate-300">Graduation Year</label>
-                  <input 
+                  <input
                     type="number"
-                    {...register('graduationYear', { 
+                    {...register('graduationYear', {
                       required: 'Graduation year is required.',
                       min: { value: 1980, message: 'Invalid year.' },
                       max: { value: 2040, message: 'Invalid year.' }
                     })}
-                    className="w-full bg-[#0d1222]/80 border border-brand-border focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 rounded-xl py-2.5 px-4 text-xs text-white placeholder-slate-500 outline-none"
+                    className="w-full bg-[#0d1222]/80 border border-brand-border focus-ring rounded-xl py-2.5 px-4 text-xs text-white placeholder-slate-500 outline-none"
                   />
                 </div>
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-slate-300">CGPA / 10.0</label>
-                  <input 
+                  <input
                     type="text"
                     {...register('cgpa', {
                       validate: val => !val || (Number(val) >= 0 && Number(val) <= 10) || 'Must be between 0.0 and 10.0'
                     })}
-                    className="w-full bg-[#0d1222]/80 border border-brand-border focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 rounded-xl py-2.5 px-4 text-xs text-white placeholder-slate-500 outline-none"
+                    className="w-full bg-[#0d1222]/80 border border-brand-border focus-ring rounded-xl py-2.5 px-4 text-xs text-white placeholder-slate-500 outline-none"
                   />
                 </div>
               </div>
@@ -267,21 +378,59 @@ export default function EditProfilePage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-slate-300">Target Role</label>
-                  <input 
+                  <input
                     type="text"
                     {...register('targetRole', { required: 'Target role is required.' })}
-                    className="w-full bg-[#0d1222]/80 border border-brand-border focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 rounded-xl py-2.5 px-4 text-xs text-white placeholder-slate-500 outline-none"
+                    className="w-full bg-[#0d1222]/80 border border-brand-border focus-ring rounded-xl py-2.5 px-4 text-xs text-white placeholder-slate-500 outline-none"
                   />
                 </div>
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-slate-300">Experience Level</label>
                   <select
                     {...register('experienceLevel')}
-                    className="w-full bg-[#0d1222]/80 border border-brand-border focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 rounded-xl py-2.5 px-4 text-xs text-white outline-none"
+                    className="w-full bg-[#0d1222]/80 border border-brand-border focus-ring rounded-xl py-2.5 px-4 text-xs text-white outline-none"
                   >
                     <option value="Student">Student</option>
                     <option value="Fresher">Fresher (Graduate)</option>
                     <option value="Experienced">Experienced Professional</option>
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-slate-300">Target Dream Company</label>
+                  <select
+                    {...register('targetCompany')}
+                    className="w-full bg-[#0d1222]/80 border border-brand-border focus-ring rounded-xl py-2.5 px-4 text-xs text-white outline-none"
+                  >
+                    <option value="">Select Dream Company</option>
+                    <option value="Google">Google</option>
+                    <option value="Amazon">Amazon</option>
+                    <option value="Microsoft">Microsoft</option>
+                    <option value="Meta">Meta</option>
+                    <option value="Adobe">Adobe</option>
+                    <option value="Oracle">Oracle</option>
+                    <option value="Salesforce">Salesforce</option>
+                    <option value="Capgemini">Capgemini</option>
+                    <option value="Cognizant">Cognizant</option>
+                    <option value="Deloitte">Deloitte</option>
+                    <option value="TCS">TCS</option>
+                    <option value="Infosys">Infosys</option>
+                    <option value="Wipro">Wipro</option>
+                    <option value="Tech Mahindra">Tech Mahindra</option>
+                    <option value="Accenture">Accenture</option>
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-slate-300">Target Year</label>
+                  <select
+                    {...register('targetTimeline')}
+                    className="w-full bg-[#0d1222]/80 border border-brand-border focus-ring rounded-xl py-2.5 px-4 text-xs text-white outline-none"
+                  >
+                    <option value="">Select Target Year</option>
+                    <option value="2026">2026</option>
+                    <option value="2027">2027</option>
+                    <option value="2028">2028</option>
+                    <option value="2029">2029</option>
+                    <option value="2030">2030</option>
                   </select>
                 </div>
               </div>
@@ -289,12 +438,12 @@ export default function EditProfilePage() {
               <div className="space-y-2">
                 <label className="text-xs font-semibold text-slate-300">Preferred Dream Companies</label>
                 <div className="flex gap-2">
-                  <input 
+                  <input
                     type="text"
                     value={inputVal.companies}
                     onChange={(e) => setInputVal(prev => ({ ...prev, companies: e.target.value }))}
                     onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddTag('companies', 'companies'); } }}
-                    className="flex-1 bg-[#0d1222]/80 border border-brand-border focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 rounded-xl py-2.5 px-4 text-xs text-white outline-none"
+                    className="flex-1 bg-[#0d1222]/80 border border-brand-border focus-ring rounded-xl py-2.5 px-4 text-xs text-white outline-none"
                   />
                   <button type="button" onClick={() => handleAddTag('companies', 'companies')} className="px-4 py-2.5 bg-brand-primary rounded-xl text-xs font-bold text-white cursor-pointer"><Plus className="w-4 h-4" /></button>
                 </div>
@@ -313,17 +462,17 @@ export default function EditProfilePage() {
           {activeTab === 'skills' && (
             <div className="space-y-6">
               <h3 className="text-sm font-bold text-white border-b border-brand-border/40 pb-2">Skills Directory</h3>
-              
+
               {/* Programming Languages */}
               <div className="space-y-2">
                 <label className="text-xs font-semibold text-slate-300">Programming Languages</label>
                 <div className="flex gap-2">
-                  <input 
+                  <input
                     type="text"
                     value={inputVal.languages}
                     onChange={(e) => setInputVal(prev => ({ ...prev, languages: e.target.value }))}
                     onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddTag('programmingLanguages', 'languages'); } }}
-                    className="flex-1 bg-[#0d1222]/80 border border-brand-border focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 rounded-xl py-2.5 px-4 text-xs text-white outline-none"
+                    className="flex-1 bg-[#0d1222]/80 border border-brand-border focus-ring rounded-xl py-2.5 px-4 text-xs text-white outline-none"
                   />
                   <button type="button" onClick={() => handleAddTag('programmingLanguages', 'languages')} className="px-4 py-2.5 bg-brand-primary rounded-xl text-xs font-bold text-white cursor-pointer"><Plus className="w-4 h-4" /></button>
                 </div>
@@ -340,12 +489,12 @@ export default function EditProfilePage() {
               <div className="space-y-2">
                 <label className="text-xs font-semibold text-slate-300">Frameworks / Libraries</label>
                 <div className="flex gap-2">
-                  <input 
+                  <input
                     type="text"
                     value={inputVal.frameworks}
                     onChange={(e) => setInputVal(prev => ({ ...prev, frameworks: e.target.value }))}
                     onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddTag('frameworks', 'frameworks'); } }}
-                    className="flex-1 bg-[#0d1222]/80 border border-brand-border focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 rounded-xl py-2.5 px-4 text-xs text-white outline-none"
+                    className="flex-1 bg-[#0d1222]/80 border border-brand-border focus-ring rounded-xl py-2.5 px-4 text-xs text-white outline-none"
                   />
                   <button type="button" onClick={() => handleAddTag('frameworks', 'frameworks')} className="px-4 py-2.5 bg-brand-primary rounded-xl text-xs font-bold text-white cursor-pointer"><Plus className="w-4 h-4" /></button>
                 </div>
@@ -362,12 +511,12 @@ export default function EditProfilePage() {
               <div className="space-y-2">
                 <label className="text-xs font-semibold text-slate-300">Databases</label>
                 <div className="flex gap-2">
-                  <input 
+                  <input
                     type="text"
                     value={inputVal.databases}
                     onChange={(e) => setInputVal(prev => ({ ...prev, databases: e.target.value }))}
                     onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddTag('databases', 'databases'); } }}
-                    className="flex-1 bg-[#0d1222]/80 border border-brand-border focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 rounded-xl py-2.5 px-4 text-xs text-white outline-none"
+                    className="flex-1 bg-[#0d1222]/80 border border-brand-border focus-ring rounded-xl py-2.5 px-4 text-xs text-white outline-none"
                   />
                   <button type="button" onClick={() => handleAddTag('databases', 'databases')} className="px-4 py-2.5 bg-brand-primary rounded-xl text-xs font-bold text-white cursor-pointer"><Plus className="w-4 h-4" /></button>
                 </div>
@@ -384,12 +533,12 @@ export default function EditProfilePage() {
               <div className="space-y-2">
                 <label className="text-xs font-semibold text-slate-300">DevOps & Tools</label>
                 <div className="flex gap-2">
-                  <input 
+                  <input
                     type="text"
                     value={inputVal.tools}
                     onChange={(e) => setInputVal(prev => ({ ...prev, tools: e.target.value }))}
                     onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddTag('tools', 'tools'); } }}
-                    className="flex-1 bg-[#0d1222]/80 border border-brand-border focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 rounded-xl py-2.5 px-4 text-xs text-white outline-none"
+                    className="flex-1 bg-[#0d1222]/80 border border-brand-border focus-ring rounded-xl py-2.5 px-4 text-xs text-white outline-none"
                   />
                   <button type="button" onClick={() => handleAddTag('tools', 'tools')} className="px-4 py-2.5 bg-brand-primary rounded-xl text-xs font-bold text-white cursor-pointer"><Plus className="w-4 h-4" /></button>
                 </div>
@@ -404,31 +553,30 @@ export default function EditProfilePage() {
             </div>
           )}
 
-          {/* Tab 4: Settings & Links */}
           {activeTab === 'settings' && (
             <div className="space-y-4">
               <h3 className="text-sm font-bold text-white border-b border-brand-border/40 pb-2">Links & Settings</h3>
-              
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-slate-300">GitHub Profile URL</label>
-                  <input 
+                  <input
                     type="text"
                     {...register('github', {
                       validate: val => !val || (val.startsWith('http') && val.includes('github.com')) || 'Must be a valid GitHub URL'
                     })}
-                    className="w-full bg-[#0d1222]/80 border border-brand-border focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 rounded-xl py-2.5 px-4 text-xs text-white outline-none"
+                    className="w-full bg-[#0d1222]/80 border border-brand-border focus-ring rounded-xl py-2.5 px-4 text-xs text-white outline-none"
                   />
                   {errors.github && <p className="text-[10px] text-brand-error mt-0.5">{errors.github.message}</p>}
                 </div>
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-slate-300">LinkedIn Profile URL</label>
-                  <input 
+                  <input
                     type="text"
                     {...register('linkedin', {
                       validate: val => !val || (val.startsWith('http') && val.includes('linkedin.com')) || 'Must be a valid LinkedIn URL'
                     })}
-                    className="w-full bg-[#0d1222]/80 border border-brand-border focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 rounded-xl py-2.5 px-4 text-xs text-white outline-none"
+                    className="w-full bg-[#0d1222]/80 border border-brand-border focus-ring rounded-xl py-2.5 px-4 text-xs text-white outline-none"
                   />
                   {errors.linkedin && <p className="text-[10px] text-brand-error mt-0.5">{errors.linkedin.message}</p>}
                 </div>
@@ -436,12 +584,12 @@ export default function EditProfilePage() {
 
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-slate-300">Portfolio Website URL</label>
-                <input 
+                <input
                   type="text"
                   {...register('portfolio', {
                     validate: val => !val || val.startsWith('http') || 'Must be a valid URL'
                   })}
-                  className="w-full bg-[#0d1222]/80 border border-brand-border focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 rounded-xl py-2.5 px-4 text-xs text-white outline-none"
+                  className="w-full bg-[#0d1222]/80 border border-brand-border focus-ring rounded-xl py-2.5 px-4 text-xs text-white outline-none"
                 />
                 {errors.portfolio && <p className="text-[10px] text-brand-error mt-0.5">{errors.portfolio.message}</p>}
               </div>
@@ -449,17 +597,17 @@ export default function EditProfilePage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-slate-300">Daily Prep Goal (Questions)</label>
-                  <input 
+                  <input
                     type="number"
                     {...register('dailyGoal')}
-                    className="w-full bg-[#0d1222]/80 border border-brand-border focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 rounded-xl py-2.5 px-4 text-xs text-white outline-none"
+                    className="w-full bg-[#0d1222]/80 border border-brand-border focus-ring rounded-xl py-2.5 px-4 text-xs text-white outline-none"
                   />
                 </div>
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-slate-300">Preferred Difficulty</label>
                   <select
                     {...register('preferredDifficulty')}
-                    className="w-full bg-[#0d1222]/80 border border-brand-border focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 rounded-xl py-2.5 px-4 text-xs text-white outline-none"
+                    className="w-full bg-[#0d1222]/80 border border-brand-border focus-ring rounded-xl py-2.5 px-4 text-xs text-white outline-none"
                   >
                     <option value="Easy">Easy</option>
                     <option value="Medium">Medium</option>
@@ -469,7 +617,7 @@ export default function EditProfilePage() {
               </div>
 
               <div className="flex items-center gap-2 pt-2">
-                <input 
+                <input
                   type="checkbox"
                   id="notificationsEnabled"
                   {...register('notificationsEnabled')}
@@ -484,7 +632,7 @@ export default function EditProfilePage() {
 
           {/* Form Actions */}
           <div className="flex items-center justify-end gap-3 border-t border-brand-border/40 pt-6">
-            <Link 
+            <Link
               to="/profile"
               className="px-5 py-2.5 border border-brand-border hover:bg-white/5 rounded-xl text-xs font-bold text-white transition-all"
             >
