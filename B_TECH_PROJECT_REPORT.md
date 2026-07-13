@@ -1,9 +1,15 @@
-# PrepAI – B.Tech Graduation Project Report
+# B.Tech Graduation Project Report
+## AI-Powered Career Preparation & Placement Simulator (PrepAI)
 
-## 🎓 Project Title: AI-Powered Career Preparation & Placement Simulator
+---
+
+### Project Metadata
+* **Project Title**: AI-Powered Career Preparation & Placement Simulator (PrepAI)
 * **Candidate**: Candidate User
-* **Program**: B.Tech in Computer Science and Engineering
-* **Academic Submission**: Graduation Project Report
+* **Degree**: Bachelor of Technology (B.Tech)
+* **Branch**: Computer Science and Engineering
+* **Host Institution**: Dept. of Computer Science & Engineering
+* **Date of Submission**: July 2026
 
 ---
 

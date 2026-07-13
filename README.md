@@ -1,4 +1,9 @@
-# PrepAI – AI-Powered Career Preparation Platform
+# PrepAI – AI-Powered Placement Prep & Mock Interview Simulator
+
+[![Vite](https://img.shields.io/badge/Vite-6.0-646CFF?style=flat&logo=vite&logoColor=white)](https://vite.dev)
+[![React](https://img.shields.io/badge/React-19.0-61DAFB?style=flat&logo=react&logoColor=white)](https://react.dev)
+[![Node.js](https://img.shields.io/badge/Node.js-20.0-339933?style=flat&logo=nodedotjs&logoColor=white)](https://nodejs.org)
+[![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248?style=flat&logo=mongodb&logoColor=white)](https://mongodb.com)
 
 > **Practice Smarter. Interview Better. Master Placements.**
 
@@ -6,26 +11,16 @@ PrepAI is a production-ready, scalable, AI-powered career preparation platform d
 
 ---
 
-## 🚀 Key Modules & Features
-
-1. **Candidate Onboarding Console**: Collects education, career goals, target companies, and current skills inventory to customize the preparation track.
-2. **Resume Analyzer & ATS Parser**: Leverages Google Gemini models to extract structured resume datasets, calculate parsing confidence scores, and provide keyword recommendations.
-3. **Job Description Alignment**: Compares resumes against specific job requirements, highlighting structural keyword gaps and calculating matching readiness ratios.
-4. **Mock Placements Simulator**: Runs full 5-question mock interviews (Technical, HR, Behavioral, Coding, Resume, or Project-based). Candidate answers are graded instantly on technical accuracy, completeness, clarity, and confidence.
-5. **Analytics Dashboard**: Renders interactive progress curves, polar concepts grids, and category-wise rating matrices.
-6. **Digital Credentials**: Generates printable verification certificates of completion for any mock interview session scoring $\ge$ 70%.
-
----
-
 ## 📂 Repository Structure
 
-The project has a clean, side-by-side frontend and backend workspace configuration:
+The project has a decoupled frontend and backend workspace configuration:
 
 ```
 PrepAI/ (Root)
 │
-├── scripts/                # Database seeders, setup scripts, and mock data loaders
-├── assets/                 # Brand assets, logos, and graphic materials
+├── scripts/                # Database seeders, setup scripts, and presentation generators
+│   ├── generate_presentation.py # Python script to generate PowerPoint presentation.pptx
+│   └── seed.js             # Seeding scripts to initialize database testing data
 │
 ├── frontend/               # React 19 Client SPA (Vite, Tailwind CSS v4, Framer Motion)
 │   ├── src/
@@ -49,8 +44,9 @@ PrepAI/ (Root)
 │   ├── SYSTEM_ARCHITECTURE.md
 │   ├── DATABASE_DESIGN.md
 │   ├── API_DOCUMENTATION.md
-│   ├── DEPLOYMENT_GUIDE.md
-│   └── DEVELOPMENT_ROADMAP.md
+│   ├── DEPLOYMENT_CHECKLIST.md
+│   ├── TESTING_CHECKLIST.md
+│   └── SPEAKER_NOTES.md
 │
 ├── README.md               # Quickstart overview and module roadmap (This file)
 └── B_TECH_PROJECT_REPORT.md # Comprehensive academic submission project report
