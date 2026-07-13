@@ -1,74 +1,117 @@
-# PrepAI – System Architecture Specification (Final Spec)
+# PrepAI – System Architecture & Data Flow
 
-## 1. Directory Structure Blueprint
+PrepAI is designed as a decoupled, standard MERN (MongoDB, Express, React, Node.js) system with pure JavaScript (ES6+). This architecture provides a clear separation of concerns, high modularity, and reliable scaling.
 
-PrepAI is structured as a decoupled, standard MERN system in JavaScript (ES6+). The folder layout is organized as follows:
+---
 
-```
-prepai/ (Root)
-│
-├── scripts/                # Database seeders, deployment helpers, and utility scripts
-├── assets/                 # Logo, favicon, Open Graph, and branding graphics
-├── .github/                # GitHub Actions workflows, PR/Issue templates
-│
-├── docs/                   # Central system planning and architecture specifications
-│   ├── SYSTEM_ARCHITECTURE.md   # Architectural designs and execution pipelines
-│   ├── DEVELOPMENT_ROADMAP.md   # Milestones, phases, and developer tracks
-│   ├── API_DOCUMENTATION.md     # Request/response interfaces and endpoint details
-│   ├── DATABASE_DESIGN.md       # Mongoose schemas, document models, and relationships
-│   ├── FEATURES.md              # Detailed platform module specifications
-│   ├── CHANGELOG.md             # Version history and release tracking
-│   ├── CONTRIBUTING.md          # PR templates, branching models, coding styling rules
-│   └── UI_UX/                   # Wireframes, user flows, and design system documentations
-│
-├── frontend/               # React 19 Client SPA
-│   ├── src/
-│   │   ├── assets/         # App-specific static images, icons
-│   │   ├── components/     # Atomic, reusable UI components (Buttons, Inputs, Cards)
-│   │   ├── layouts/        # Page shell structures (DashboardLayout, AuthLayout)
-│   │   ├── pages/          # Direct route landing views (DashboardPage, InterviewPage)
-│   │   ├── routes/         # React Router configurations and page guards
-│   │   ├── context/        # State managers (e.g. AuthContext)
-│   │   ├── hooks/          # Reusable React custom hooks
-│   │   ├── lib/            # Axios instance, local storage helper, token manager
-│   │   ├── config/         # Navigation setups, API endpoints configurations
-│   │   ├── styles/         # Global styles overrides, scrollbar styling, keyframes
-│   │   ├── theme/          # Custom color profiles, typography, spacing HSL parameters
-│   │   ├── services/       # Network API endpoint query mappings
-│   │   ├── utils/          # Formatting helpers, time calculations
-│   │   ├── constants/      # App properties, menu lists, state enums
-│   │   ├── App.jsx         # Custom fluid navigation shell
-│   │   └── main.jsx        # App DOM mount wrapper
-│   └── package.json
-│
-├── backend/                # Node.js + Express.js API Server
-│   ├── config/             # DB settings, environment loaders
-│   ├── controllers/        # Request controllers handling business operations
-│   ├── middleware/         # Security ratelimiters, auth parses, error boundaries
-│   ├── models/             # Mongoose schemas
-│   ├── routes/             # REST route routing mapping
-│   ├── services/           # Decoupled business helpers (e.g. ATS parsing, email smtp)
-│   ├── lib/                # Integrations (Gemini API SDK, Cloudinary, Email SMTP client)
-│   ├── errors/             # Custom exception classes and definitions
-│   ├── tests/              # Test suites
-│   │   ├── unit/           # Unit tests
-│   │   └── integration/    # API integration tests
-│   ├── validators/         # Joi/Zod request validator configurations
-│   ├── utils/              # Internal utilities and helpers
-│   ├── uploads/            # Temporary file storage (User resumes, avatars)
-│   ├── logs/               # Production runtime logs
-│   ├── app.js              # Express app bootstrap
-│   ├── server.js           # Server listen script
-│   └── package.json
+## 1. Component Architecture Topology
+
+```mermaid
+graph TB
+    subgraph Client View Layer (React 19)
+        A[Vite React SPA] --> B[Auth Pages / Guards]
+        A --> C[Dashboard / Console]
+        A --> D[Resume / ATS Parser]
+        A --> E[Mock Placement Simulator]
+        A --> F[Analytics & Certificates]
+    end
+
+    subgraph API Controller Layer (Express.js)
+        B -->|JWT Token / Credentials| G[Auth Router]
+        C -->|Secure Request| H[Dashboard Router]
+        D -->|PDF Upload / Parse request| I[Resume Router]
+        E -->|Initialize / Answer / End| J[Interview Router]
+        F -->|Fetch stats / Print cert| K[Analytics Router]
+    end
+
+    subgraph Business Service Layer (Node.js)
+        I -->|Parse Document File| L[Resume Parser Service]
+        J -->|Construct Prompts| M[Gemini AI prompt builder]
+        J -->|Evaluate Answers| N[AI Evaluation Engine]
+        L -->|Analyze Skills| O[Gemini API Client]
+        M -->|Send Context| O
+        N -->|Verify Concepts| O
+    end
+
+    subgraph Persistent Storage Layer
+        G -->|Save Credentials| P[(MongoDB Atlas)]
+        H -->|Query Stats| P
+        I -->|Save Extracted Details| P
+        J -->|Save Sessions & Scores| P
+        K -->|Query Charts & Certificates| P
+    end
 ```
 
 ---
 
-## 2. Decoupled MERN Scalability Strategy
+## 2. Dynamic Ingestion Pipelines
 
-This architecture supports high scalability, modularity, and reliable deployment:
+### A. Resume Upload & ATS Parsing Flow
+```mermaid
+sequenceDiagram
+    participant Candidate
+    participant SPA as Client SPA
+    participant API as Express API
+    participant Gem as Gemini AI Engine
+    participant DB as MongoDB
 
-*   **Decoupled Workspaces:** The frontend acts as a fully static SPA deployed via CDN (Vercel/Netlify). The backend runs inside containers (Docker on AWS ECS/App Runner). This allows independent scaling based on load (e.g., Express servers scale horizontally under high Gemini API request loads).
-*   **Encapsulated Core Libraries (`lib/`):** Both frontend and backend isolate third-party clients (Axios, Gemini API client, Cloudinary file uploads) in a central `lib/` directory. This makes updating SDKs or swapping providers straightforward without breaking controllers or views.
-*   **Centralized Exception System (`backend/errors/`)**: Defines custom error patterns (e.g. `UnauthorizedError`, `BadRequestError`, `NotFoundError`) that inherit from a base `AppError`. Centralized Express error-handling middleware intercepts these to standardise JSON error responses.
-*   **Testing Coverage (`backend/tests/`)**: Subdivision into `unit/` and `integration/` ensures that low-level helpers (like parser engines) and controller APIs can be validated in isolation, accelerating CI/CD checks in `.github/`.
+    Candidate->>SPA: Selects PDF and clicks Upload
+    SPA->>API: POST /api/v1/resume/upload (Multer multipart)
+    API->>API: Saves temporary PDF file to backend/uploads/
+    API->>DB: Saves Resume metadata (status: 'Uploaded')
+    API-->>SPA: Returns Success (201 Created)
+    
+    Candidate->>SPA: Clicks "Initiate Parse Console"
+    SPA->>API: POST /api/v1/resume/parse
+    API->>API: Reads PDF buffer and extracts plain text
+    API->>Gem: Sends extracted text with strict JSON template prompt
+    Gem-->>API: Returns structured JSON (Skills, Education, Experience)
+    API->>DB: Updates Resume metadata (status: 'Parsed', extractedDetails)
+    API->>DB: Creates CareerSnapshot record
+    API-->>SPA: Returns parsingConfidence & extractedDetails JSON
+    SPA-->>Candidate: Renders Parsed Resume metrics & tables
+```
+
+### B. Mock Interview Lifecycle & Evaluation
+```mermaid
+sequenceDiagram
+    participant Candidate
+    participant SPA as Client SPA
+    participant API as Express API
+    participant Gem as Gemini AI Engine
+    participant DB as MongoDB
+
+    Candidate->>SPA: Selects Track (e.g. Technical) & Clicks Initialize
+    SPA->>API: POST /api/v1/interview/start
+    API->>Gem: Generates 5 personalized questions based on user target role & skills
+    Gem-->>API: Returns 5-question structured array
+    API->>DB: Saves Interview session (status: 'started', questions array)
+    API-->>SPA: Returns first Question details
+    
+    Loop 5 times (for each question)
+        Candidate->>SPA: Submits written response / speech transcript
+        SPA->>API: POST /api/v1/interview/answer
+        API->>Gem: Sends question, response, and scoring prompt criteria
+        Gem-->>API: Returns score, accuracy, communication rating & feedback suggestions
+        API->>DB: Updates questions.answer & questions.feedback in Interview schema
+        API-->>SPA: Returns Evaluation feedback scorecard
+        SPA-->>Candidate: Renders immediate response feedback
+    end
+
+    Candidate->>SPA: Reaches final step
+    SPA->>API: POST /api/v1/interview/end
+    API->>API: Aggregates category averages (Technical, Communication, Coding)
+    API->>DB: Updates Interview session (status: 'completed', analytics summary)
+    API-->>SPA: Returns Final Report data
+    SPA-->>Candidate: Unlocks printable Completion Certificate if score >= 70%
+```
+
+---
+
+## 3. Decoupled Workspace Scalability Strategy
+
+PrepAI ensures that high-load operations (such as dynamic AI processing) do not block main application components:
+
+*   **Static Asset Delivery:** The React 19 frontend is bundled via Vite and is optimized for zero-overhead static hosting on Content Delivery Networks (CDNs) like Vercel or Netlify.
+*   **Encapsulated Integration APIs (`backend/lib/`):** Third-party API clients, including the Google Gemini AI SDK, email SMTP relays, and file upload systems, are quarantined inside dedicated library scripts. Swapping AI versions (e.g. upgrading to a newer Gemini flash/pro model) requires no changes to Express routers or controller bodies.
+*   **Centralized Exception Middleware (`backend/errors/`):** App exceptions are managed via custom error subclasses (such as `UnauthorizedError`, `BadRequestError`, and `NotFoundError`) extending a base `AppError` class. A global Express error interceptor maps these to standardized JSON payloads, preventing application crashes.
