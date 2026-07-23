@@ -281,7 +281,27 @@ exports.parseResume = async (req, res, next) => {
 
     // 2. Read PDF buffer from disk
     const filePath = path.join(__dirname, '..', 'uploads', 'resumes', user._id.toString(), user.resumeMetadata.storedFileName);
-    const fileBuffer = await fs.readFile(filePath);
+    let fileBuffer;
+    try {
+      fileBuffer = await fs.readFile(filePath);
+    } catch (fsErr) {
+      if (fsErr.code === 'ENOENT') {
+        const errorMsg = "Your uploaded resume file is missing from the server's temporary storage. Please go to the 'Manage Resume' tab and upload your resume again.";
+        user.resumeMetadata.status = 'Failed';
+        user.resumeMetadata.parsingLogs = {
+          startedAt,
+          completedAt: new Date(),
+          duration: 0,
+          errors: [errorMsg]
+        };
+        await user.save({ validateBeforeSave: false });
+        return res.status(400).json({
+          success: false,
+          error: errorMsg
+        });
+      }
+      throw fsErr;
+    }
 
     // 3. Extract and parse using the modular parsing engine
     const { rawText, parsedData, parsingConfidence } = await parseResume(fileBuffer, {
