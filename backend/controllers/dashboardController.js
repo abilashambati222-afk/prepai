@@ -51,8 +51,10 @@ exports.getDashboardData = async (req, res, next) => {
   try {
     const user = req.user;
     const Career = require('../models/Career');
+    const MCQQuizResult = require('../models/MCQQuizResult');
     const career = await Career.findOne({ user: user._id });
     const careerScore = career ? career.careerScore : 0;
+    const completedMcqs = await MCQQuizResult.countDocuments({ user: user._id });
     
     // 1. Calculate profile completion ratio
     const completionPercent = calculateCompletion(user);
@@ -109,6 +111,7 @@ exports.getDashboardData = async (req, res, next) => {
         streak: activeStreak,
         interviewReadiness: user.interviewReadiness || 0,
         completedInterviews: user.interviewHistory ? user.interviewHistory.length : 0,
+        completedMcqs: completedMcqs,
         averageScore: user.overallInterviewScore || 0,
         bestCompanyScore: user.companyScores && Object.keys(user.companyScores).length > 0 ? Math.max(...Object.values(user.companyScores).map(Number)) : 0,
         technicalScore: user.interviewAnalytics?.technicalScore || 0,
@@ -133,7 +136,7 @@ exports.getDashboardData = async (req, res, next) => {
           { id: 'resume', name: 'Upload Resume', action: '/resume-analyzer', available: true },
           { id: 'interview', name: 'Start Mock Interview', action: '/mock-interviews', available: true },
           { id: 'coding', name: 'Practice Coding', action: '/coding-practice', available: false }, // Upcoming
-          { id: 'mcq', name: 'Solve MCQs', action: '/mcq-practice', available: false }, // Upcoming
+          { id: 'mcq', name: 'Solve MCQs', action: '/mcq-practice', available: true }, // Available!
           { id: 'analytics', name: 'View Analytics', action: '/analytics', available: true }
         ]
       }

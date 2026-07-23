@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -6,22 +6,38 @@ import { ToastProvider } from './components/Toast';
 import ProtectedRoute from './components/ProtectedRoute';
 import PublicRoute from './components/PublicRoute';
 import ProtectedLayout from './layouts/ProtectedLayout';
-import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
-import OnboardingPage from './pages/OnboardingPage';
-import ProfilePage from './pages/ProfilePage';
-import EditProfilePage from './pages/EditProfilePage';
-import DashboardPage from './pages/DashboardPage';
-import ResumePage from './pages/ResumePage';
-import InterviewDashboard from './pages/InterviewDashboard';
-import InterviewSetup from './pages/InterviewSetup';
-import InterviewSession from './pages/InterviewSession';
-import InterviewReport from './pages/InterviewReport';
-import InterviewHistory from './pages/InterviewHistory';
-import InterviewCertificates from './pages/InterviewCertificates';
-import CompanyInterview from './pages/CompanyInterview';
-import RoleInterview from './pages/RoleInterview';
-import InterviewAnalytics from './pages/InterviewAnalytics';
+const LoginPage = lazy(() => import('./pages/LoginPage'));
+const RegisterPage = lazy(() => import('./pages/RegisterPage'));
+const OnboardingPage = lazy(() => import('./pages/OnboardingPage'));
+const ProfilePage = lazy(() => import('./pages/ProfilePage'));
+const EditProfilePage = lazy(() => import('./pages/EditProfilePage'));
+const DashboardPage = lazy(() => import('./pages/DashboardPage'));
+const ResumePage = lazy(() => import('./pages/ResumePage'));
+const InterviewDashboard = lazy(() => import('./pages/InterviewDashboard'));
+const InterviewSetup = lazy(() => import('./pages/InterviewSetup'));
+const InterviewSession = lazy(() => import('./pages/InterviewSession'));
+const InterviewReadiness = lazy(() => import('./pages/InterviewReadiness'));
+const InterviewReport = lazy(() => import('./pages/InterviewReport'));
+const InterviewHistory = lazy(() => import('./pages/InterviewHistory'));
+const InterviewCertificates = lazy(() => import('./pages/InterviewCertificates'));
+const CompanyInterview = lazy(() => import('./pages/CompanyInterview'));
+const RoleInterview = lazy(() => import('./pages/RoleInterview'));
+const InterviewAnalytics = lazy(() => import('./pages/InterviewAnalytics'));
+const CodingDashboard = lazy(() => import('./pages/CodingDashboard'));
+const CodingProblemList = lazy(() => import('./pages/CodingProblemList'));
+const CodingProblemDetails = lazy(() => import('./pages/CodingProblemDetails'));
+const MCQDashboard = lazy(() => import('./pages/MCQDashboard'));
+const MCQQuizSession = lazy(() => import('./pages/MCQQuizSession'));
+const MCQQuizReport = lazy(() => import('./pages/MCQQuizReport'));
+const MCQBookmarksPage = lazy(() => import('./pages/MCQBookmarksPage'));
+const MCQCategories = lazy(() => import('./pages/MCQCategories'));
+const MCQQuestionList = lazy(() => import('./pages/MCQQuestionList'));
+const MCQQuiz = lazy(() => import('./pages/MCQQuiz'));
+const MCQResults = lazy(() => import('./pages/MCQResults'));
+const MCQHistory = lazy(() => import('./pages/MCQHistory'));
+const MCQBookmarks = lazy(() => import('./pages/MCQBookmarks'));
+const MCQLeaderboard = lazy(() => import('./pages/MCQLeaderboard'));
+const MCQAnalytics = lazy(() => import('./pages/MCQAnalytics'));
 import {
   Sparkles,
   ShieldCheck,
@@ -150,8 +166,8 @@ function DashboardHome() {
                       <Icon className="w-6 h-6" />
                     </div>
                     <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${mod.id === 'dashboard'
-                        ? 'bg-brand-success/10 border border-brand-success/20 text-brand-success'
-                        : 'bg-brand-warning/10 border border-brand-warning/20 text-brand-warning'
+                      ? 'bg-brand-success/10 border border-brand-success/20 text-brand-success'
+                      : 'bg-brand-warning/10 border border-brand-warning/20 text-brand-warning'
                       }`}>
                       {mod.phase}
                     </span>
@@ -229,57 +245,77 @@ export default function App() {
     <ToastProvider>
       <AuthProvider>
         <BrowserRouter>
-          <Routes>
-            <Route
-              path="/login"
-              element={
-                <PublicRoute>
-                  <LoginPage />
-                </PublicRoute>
-              }
-            />
-            <Route
-              path="/register"
-              element={
-                <PublicRoute>
-                  <RegisterPage />
-                </PublicRoute>
-              }
-            />
-            <Route
-              path="/onboarding"
-              element={
-                <ProtectedRoute allowIncompleteProfile={true}>
-                  <OnboardingPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/*"
-              element={
-                <ProtectedRoute>
-                  <ProtectedLayout />
-                </ProtectedRoute>
-              }
-            >
-              <Route index element={<DashboardPage />} />
-              <Route path="profile" element={<ProfilePage />} />
-              <Route path="profile/edit" element={<EditProfilePage />} />
-              <Route path="resume-analyzer" element={<ResumePage />} />
-              <Route path="mock-interviews" element={<InterviewDashboard />} />
-              <Route path="mock-interviews/setup" element={<InterviewSetup />} />
-              <Route path="mock-interviews/session/:id" element={<InterviewSession />} />
-              <Route path="mock-interviews/report/:id" element={<InterviewReport />} />
-              <Route path="mock-interviews/history" element={<InterviewHistory />} />
-              <Route path="mock-interviews/certificates" element={<InterviewCertificates />} />
-              <Route path="mock-interviews/company" element={<CompanyInterview />} />
-              <Route path="mock-interviews/role" element={<RoleInterview />} />
-              <Route path="coding-practice" element={<PlaceholderModule title="Coding practice" desc="Algorithmic practice sandbox." />} />
-              <Route path="mcq-practice" element={<PlaceholderModule title="MCQ placement practice" desc="Subject-based conceptual quizzes." />} />
-              <Route path="company-prep" element={<CompanyInterview />} />
-              <Route path="analytics" element={<InterviewAnalytics />} />
-            </Route>
-          </Routes>
+          <Suspense fallback={
+            <div className="min-h-screen bg-brand-dark flex items-center justify-center">
+              <div className="w-8 h-8 border-4 border-brand-primary border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          }>
+            <Routes>
+              <Route
+                path="/login"
+                element={
+                  <PublicRoute>
+                    <LoginPage />
+                  </PublicRoute>
+                }
+              />
+              <Route
+                path="/register"
+                element={
+                  <PublicRoute>
+                    <RegisterPage />
+                  </PublicRoute>
+                }
+              />
+              <Route
+                path="/onboarding"
+                element={
+                  <ProtectedRoute allowIncompleteProfile={true}>
+                    <OnboardingPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/*"
+                element={
+                  <ProtectedRoute>
+                    <ProtectedLayout />
+                  </ProtectedRoute>
+                }
+              >
+                <Route index element={<DashboardPage />} />
+                <Route path="profile" element={<ProfilePage />} />
+                <Route path="profile/edit" element={<EditProfilePage />} />
+                <Route path="resume-analyzer" element={<ResumePage />} />
+                <Route path="mock-interviews" element={<InterviewDashboard />} />
+                <Route path="mock-interviews/setup" element={<InterviewSetup />} />
+                <Route path="mock-interviews/readiness/:id" element={<InterviewReadiness />} />
+                <Route path="mock-interviews/session/:id" element={<InterviewSession />} />
+                <Route path="mock-interviews/report/:id" element={<InterviewReport />} />
+                <Route path="mock-interviews/history" element={<InterviewHistory />} />
+                <Route path="mock-interviews/certificates" element={<InterviewCertificates />} />
+                <Route path="mock-interviews/company" element={<CompanyInterview />} />
+                <Route path="mock-interviews/role" element={<RoleInterview />} />
+                <Route path="coding-practice" element={<CodingDashboard />} />
+                <Route path="coding-practice/problems" element={<CodingProblemList />} />
+                <Route path="coding-practice/problem/:slug" element={<CodingProblemDetails />} />
+                <Route path="mcq-practice" element={<MCQDashboard />} />
+                <Route path="mcq-practice/quiz" element={<MCQQuizSession />} />
+                <Route path="mcq-practice/report/:id" element={<MCQQuizReport />} />
+                <Route path="mcq-practice/bookmarks" element={<MCQBookmarksPage />} />
+                <Route path="mcq/categories" element={<MCQCategories />} />
+                <Route path="mcq/questions" element={<MCQQuestionList />} />
+                <Route path="mcq/question/:id" element={<MCQQuiz />} />
+                <Route path="mcq/results" element={<MCQResults />} />
+                <Route path="mcq/history" element={<MCQHistory />} />
+                <Route path="mcq/bookmarks" element={<MCQBookmarks />} />
+                <Route path="mcq/leaderboard" element={<MCQLeaderboard />} />
+                <Route path="mcq/analytics" element={<MCQAnalytics />} />
+                <Route path="company-prep" element={<CompanyInterview />} />
+                <Route path="analytics" element={<InterviewAnalytics />} />
+              </Route>
+            </Routes>
+          </Suspense>
         </BrowserRouter>
       </AuthProvider>
     </ToastProvider>

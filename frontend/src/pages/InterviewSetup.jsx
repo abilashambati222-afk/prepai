@@ -58,7 +58,7 @@ export default function InterviewSetup() {
 
       if (response.data?.success) {
         const session = response.data.data;
-        navigate(`/mock-interviews/session/${session._id}`);
+        navigate(`/mock-interviews/readiness/${session._id}`);
       }
     } catch (err) {
       console.error(err);

@@ -7,6 +7,7 @@ const reportGenerator = require('../services/interview/reportGenerator');
 const transcriptGenerator = require('../services/interview/transcriptGenerator');
 const BadRequestError = require('../errors/BadRequestError');
 const NotFoundError = require('../errors/NotFoundError');
+const InterviewIntegrity = require('../models/InterviewIntegrity');
 
 /**
  * Controller exposing all Phase 10 Mock Interview operations
@@ -27,6 +28,16 @@ exports.startInterview = async (req, res, next) => {
       company: company || '',
       role: role || req.user.targetRole || 'Software Engineer',
       difficulty: difficulty || 'Medium'
+    });
+
+    // Create the InterviewIntegrity tracking document
+    await InterviewIntegrity.create({
+      user: req.user._id,
+      interview: session._id,
+      integrityScore: 100,
+      warnings: 0,
+      violations: [],
+      timeline: [{ type: 'info', message: 'Readiness check complete. Session proctoring started.', timestamp: new Date() }]
     });
 
     res.status(201).json({
@@ -70,12 +81,34 @@ exports.submitAnswer = async (req, res, next) => {
  */
 exports.endInterview = async (req, res, next) => {
   try {
-    const { interviewId } = req.body;
+    const { interviewId, status } = req.body;
     if (!interviewId) {
       throw new BadRequestError('interviewId is required.');
     }
 
     const result = await interviewEngine.endInterview(req.user._id, interviewId);
+
+    // Save final status in proctor logs
+    const integrity = await InterviewIntegrity.findOne({ interview: interviewId, user: req.user._id });
+    if (integrity) {
+      if (status) integrity.status = status;
+      if (req.body.sessionHealth) {
+        const sh = req.body.sessionHealth;
+        integrity.sessionHealth = {
+          averageFps: Number(sh.averageFps) || 0,
+          aiInferenceTimeMs: Number(sh.aiInferenceTimeMs) || 0,
+          droppedFramesCount: Number(sh.droppedFramesCount) || 0,
+          cameraResolution: String(sh.cameraResolution || ''),
+          browserVersion: String(sh.browserVersion || '')
+        };
+      }
+      integrity.timeline.push({
+        type: 'info',
+        message: `Interview proctoring finalized. Status: ${status || 'completed'}. Final integrity score: ${integrity.integrityScore}%`,
+        timestamp: new Date()
+      });
+      await integrity.save();
+    }
 
     res.status(200).json({
       success: true,
@@ -131,15 +164,21 @@ exports.getReport = async (req, res, next) => {
       throw new NotFoundError('Interview session not found.');
     }
 
-    if (session.status !== 'completed') {
+    if (session.status !== 'completed' && session.status !== 'ended') {
       throw new BadRequestError('Cannot fetch report for an incomplete interview.');
     }
 
     const report = reportGenerator.generateReport(session);
 
+    // Retrieve corresponding integrity logs
+    const integrity = await InterviewIntegrity.findOne({ interview: req.params.id, user: req.user._id }).lean();
+
     res.status(200).json({
       success: true,
-      data: report
+      data: {
+        ...report,
+        integrity: integrity || null
+      }
     });
   } catch (err) {
     next(err);
@@ -235,6 +274,168 @@ exports.getTranscript = async (req, res, next) => {
     const transcript = transcriptGenerator.generateTranscript(session);
     res.setHeader('Content-Type', 'text/plain');
     res.status(200).send(transcript);
+  } catch (err) {
+    next(err);
+  }
+};
+
+// POST /api/v1/interview/event
+exports.logProctorEvent = async (req, res, next) => {
+  try {
+    const { interviewId, eventType, details, duration = 0 } = req.body;
+    if (!interviewId || !eventType) {
+      return res.status(400).json({ success: false, message: 'interviewId and eventType are required.' });
+    }
+
+    const integrity = await InterviewIntegrity.findOne({ interview: interviewId, user: req.user._id });
+    if (!integrity) {
+      return res.status(404).json({ success: false, message: 'Integrity record not found.' });
+    }
+
+    // Sort events into specialized arrays for granular analytics
+    const eyeEvents = ['looking_left', 'looking_right', 'looking_up', 'looking_down', 'eyes_closed'];
+    const headEvents = ['head_left', 'head_right', 'head_down', 'head_away'];
+
+    if (eyeEvents.includes(eventType)) {
+      integrity.eyeMovementEvents.push({
+        type: eventType,
+        duration,
+        timestamp: new Date()
+      });
+    } else if (headEvents.includes(eventType)) {
+      integrity.headPoseEvents.push({
+        type: eventType,
+        duration,
+        timestamp: new Date()
+      });
+    } else {
+      integrity.violations.push({
+        type: eventType,
+        duration,
+        details: details || '',
+        timestamp: new Date()
+      });
+    }
+
+    integrity.timeline.push({
+      type: 'info',
+      message: `System flag logged: ${eventType.replace('_', ' ')}. Details: ${details || 'None'}`,
+      timestamp: new Date()
+    });
+
+    await integrity.save();
+
+    res.status(200).json({ success: true, message: 'Proctor event logged successfully.' });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// POST /api/v1/interview/warning
+exports.logProctorWarning = async (req, res, next) => {
+  try {
+    const { interviewId, warningType, details } = req.body;
+    if (!interviewId || !warningType) {
+      return res.status(400).json({ success: false, message: 'interviewId and warningType are required.' });
+    }
+
+    const integrity = await InterviewIntegrity.findOne({ interview: interviewId, user: req.user._id });
+    if (!integrity) {
+      return res.status(404).json({ success: false, message: 'Integrity record not found.' });
+    }
+
+    const { PROCTOR_POLICIES } = require('../config/proctorConfig');
+    const policy = PROCTOR_POLICIES[warningType] || { scoreDeduction: 5 };
+    const deduction = policy.scoreDeduction;
+
+    integrity.warnings += 1;
+    integrity.integrityScore = Math.max(0, integrity.integrityScore - deduction);
+
+    integrity.violations.push({
+      type: warningType,
+      duration: 0,
+      details: details || `Warning triggered for ${warningType.replace('_', ' ')}`,
+      timestamp: new Date()
+    });
+
+    integrity.timeline.push({
+      type: 'warning',
+      message: `WARNING #${integrity.warnings}: Prohibited activity: ${warningType.replace('_', ' ')}. Integrity score: ${integrity.integrityScore}%`,
+      timestamp: new Date()
+    });
+
+    await integrity.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Warning logged successfully.',
+      data: {
+        warnings: integrity.warnings,
+        integrityScore: integrity.integrityScore
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// POST /api/v1/interview/evidence
+exports.uploadProctorEvidence = async (req, res, next) => {
+  try {
+    const { 
+      interviewId, 
+      violationType, 
+      confidence = 100, 
+      duration = 10, 
+      modelUsed = 'Unknown', 
+      modelVersion = '1.0.0' 
+    } = req.body;
+
+    if (!interviewId || !violationType || !req.files || !req.files['video']) {
+      return res.status(400).json({
+        success: false,
+        message: 'interviewId, violationType, and video file are required.'
+      });
+    }
+
+    const integrity = await InterviewIntegrity.findOne({ interview: interviewId, user: req.user._id });
+    if (!integrity) {
+      return res.status(404).json({ success: false, message: 'Integrity record not found.' });
+    }
+
+    const videoFile = req.files['video'][0];
+    const videoPath = `/uploads/${videoFile.filename}`;
+    
+    const thumbnailFile = req.files['thumbnail'] ? req.files['thumbnail'][0] : null;
+    const thumbnailPath = thumbnailFile ? `/uploads/${thumbnailFile.filename}` : '';
+
+    integrity.evidenceClips.push({
+      violationType,
+      duration: parseInt(duration),
+      confidence: parseFloat(confidence),
+      videoPath,
+      thumbnailPath,
+      modelUsed,
+      modelVersion,
+      reviewed: false,
+      reviewNotes: '',
+      reviewedBy: null,
+      reviewedAt: null
+    });
+
+    integrity.timeline.push({
+      type: 'info',
+      message: `Evidence clip recorded for: ${violationType.replace('_', ' ')}. Method: ${modelUsed} v${modelVersion} (Confidence: ${confidence}%)`,
+      timestamp: new Date()
+    });
+
+    await integrity.save();
+
+    res.status(201).json({
+      success: true,
+      message: 'Evidence clip uploaded and linked successfully.',
+      data: integrity
+    });
   } catch (err) {
     next(err);
   }

@@ -73,7 +73,7 @@ export default function DashboardPage() {
     );
   }
 
-  const { user, streak, todaysGoal, quickStats, quickActions, careerScore = 0, overallCareerScore = 0, targetCompanyReadiness = 0, completedInterviews = 0 } = stats;
+  const { user, streak, todaysGoal, quickStats, quickActions, careerScore = 0, overallCareerScore = 0, targetCompanyReadiness = 0, completedInterviews = 0, completedMcqs = 0 } = stats;
 
   const resumeStatus = stats.resumeStatus || {
     uploaded: false,
@@ -472,12 +472,15 @@ export default function DashboardPage() {
                 Test placement topics like OS, DBMS, Networks, and OOPS.
               </p>
               <div className="text-[10px] text-slate-400 font-semibold italic">
-                0 Quizzes completed
+                {completedMcqs} Quizzes completed
               </div>
             </div>
             <div className="pt-3 border-t border-brand-border/40">
-              <button disabled className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl bg-white/5 border border-brand-border/40 text-[10px] text-slate-500 font-bold cursor-not-allowed">
-                Start Quizzes (Coming Soon)
+              <button
+                onClick={() => navigate('/mcq-practice')}
+                className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl bg-brand-primary hover:bg-brand-primary/95 text-[10px] text-white font-bold cursor-pointer transition-all shadow shadow-brand-primary/10"
+              >
+                Start Quizzes
               </button>
             </div>
           </div>

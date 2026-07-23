@@ -74,6 +74,18 @@ export default function ProtectedLayout() {
     (t.path !== '/' && location.pathname.startsWith(t.path))
   ) || MODULES[0];
 
+  const isFullScreenSession = location.pathname.includes('/mock-interviews/session/');
+
+  if (isFullScreenSession) {
+    return (
+      <div className="min-h-screen bg-brand-dark font-sans text-slate-100 w-full flex flex-col">
+        <main className="flex-1 p-0 m-0 w-full h-screen overflow-y-auto">
+          <Outlet />
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex bg-brand-dark font-sans text-slate-100 overflow-x-hidden w-full">
 
