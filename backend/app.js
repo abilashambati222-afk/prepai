@@ -12,6 +12,8 @@ const resumeRoutes = require('./routes/resumeRoutes');
 const jobDescriptionRoutes = require('./routes/jobDescriptionRoutes');
 const careerRoutes = require('./routes/careerRoutes');
 const interviewRoutes = require('./routes/interviewRoutes');
+const codingRoutes = require('./routes/codingRoutes');
+const mcqRoutes = require('./routes/mcqRoutes');
 const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
@@ -20,10 +22,30 @@ const app = express();
 app.use(helmet());
 
 // Enable Cross-Origin Resource Sharing (CORS)
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:5000',
+  'http://localhost:3000'
+];
+
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps, curl, or postman)
+    if (!origin) return callback(null, true);
+    
+    const isAllowed = allowedOrigins.includes(origin) || 
+                      origin.endsWith('.onrender.com') || 
+                      origin === process.env.CLIENT_URL;
+                      
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true
 }));
+
 
 // Body parser, reading data from body into req.body
 app.use(express.json({ limit: '10mb' }));
@@ -80,6 +102,8 @@ app.use('/api/v1/career', careerRoutes);
 
 // Mount Interview Router
 app.use('/api/v1/interview', interviewRoutes);
+app.use('/api/v1/coding', codingRoutes);
+app.use('/api/v1/mcq', mcqRoutes);
 
 // Fallback Route Handler (404)
 app.use((req, res) => {

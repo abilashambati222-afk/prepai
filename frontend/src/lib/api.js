@@ -1,32 +1,26 @@
-import axios from 'axios';
+import axios from "axios";
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1',
+  baseURL: import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1",
   headers: {
-    'Content-Type': 'application/json'
-  }
+    "Content-Type": "application/json",
+  },
 });
 
-// Request Interceptor: Attach JWT Bearer Token if present in LocalStorage
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('prepai_token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem("prepai_token");
+
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
   }
-);
+
+  return config;
+});
 
 // Response Interceptor: Centralized Global API Error Handler
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    const originalRequest = error.config;
-    
     // Parse standardized backend error structure
     const responseData = error.response?.data;
     const message = responseData?.message || 'An unexpected network error occurred. Please try again.';
@@ -40,10 +34,15 @@ api.interceptors.response.use(
       originalError: error
     };
 
-    // If 401 Unauthorized, trigger session cleaning
+    // If 401 Unauthorized, trigger session cleaning and redirect to login if appropriate
     if (error.response && error.response.status === 401) {
       localStorage.removeItem('prepai_token');
+      localStorage.removeItem('prepai_user');
       window.dispatchEvent(new CustomEvent('prepai_unauthorized', { detail: parsedError }));
+      
+      if (!['/', '/login', '/register'].includes(window.location.pathname)) {
+        window.location.href = '/login';
+      }
     }
 
     return Promise.reject(parsedError);
