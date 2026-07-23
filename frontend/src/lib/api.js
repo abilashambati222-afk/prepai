@@ -2,7 +2,7 @@ import axios from "axios";
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1",
-  timeout: 15000, // 15 seconds timeout
+  timeout: 45000, // 45 seconds timeout to prevent premature aborts on AI requests
   headers: {
     "Content-Type": "application/json",
   },
