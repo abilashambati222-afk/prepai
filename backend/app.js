@@ -61,15 +61,12 @@ if (process.env.NODE_ENV === 'development') {
 
 // Core API Health Route
 app.get('/api/v1/health', (req, res) => {
-  const key = process.env.GEMINI_API_KEY || '';
   res.status(200).json({
     status: 'success',
     message: 'PrepAI API Server is healthy.',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development',
-    geminiKeyConfigured: !!key,
-    geminiKeyLength: key.length,
-    geminiKeyPrefix: key ? key.substring(0, 15) : '',
+    geminiKeyConfigured: !!process.env.GEMINI_API_KEY,
     version: '1.0.0'
   });
 });
