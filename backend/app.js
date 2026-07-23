@@ -59,18 +59,6 @@ if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
 
-// Limit requests from same API
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per window
-  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-  message: {
-    error: 'Too many requests from this IP, please try again after 15 minutes'
-  }
-});
-app.use('/api', limiter);
-
 // Core API Health Route
 app.get('/api/v1/health', (req, res) => {
   res.status(200).json({
@@ -82,6 +70,18 @@ app.get('/api/v1/health', (req, res) => {
     version: '1.0.0'
   });
 });
+
+// Limit requests from same API
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per window
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  message: {
+    error: 'Too many requests from this IP, please try again after 15 minutes'
+  }
+});
+app.use('/api', limiter);
 
 // Mount Authentication Router
 app.use('/api/v1/auth', authRoutes);
