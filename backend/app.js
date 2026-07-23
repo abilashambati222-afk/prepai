@@ -78,6 +78,7 @@ app.get('/api/v1/health', (req, res) => {
     message: 'PrepAI API Server is healthy.',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development',
+    geminiKeyConfigured: !!process.env.GEMINI_API_KEY,
     version: '1.0.0'
   });
 });
