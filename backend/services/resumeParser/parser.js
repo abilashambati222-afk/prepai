@@ -10,6 +10,20 @@ const { buildJson } = require('./jsonBuilder');
  * Fallback parsing strategy using pdfjs-dist legacy backend for corrupted XRef or broken streams
  */
 const parsePdfFallback = async (pdfBuffer) => {
+  // Mock canvas to prevent pdfjs-dist from crashing if the 'canvas' package is not installed in the environment
+  try {
+    require.resolve('canvas');
+  } catch (e) {
+    const Module = require('module');
+    const originalRequire = Module.prototype.require;
+    Module.prototype.require = function (id) {
+      if (id === 'canvas') {
+        return {};
+      }
+      return originalRequire.apply(this, arguments);
+    };
+  }
+
   const pdfjsLib = require('pdfjs-dist/legacy/build/pdf.js');
   
   const loadingTask = pdfjsLib.getDocument({

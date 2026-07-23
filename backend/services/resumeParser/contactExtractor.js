@@ -10,15 +10,20 @@ const extractName = (text) => {
   // Scans top 4 non-empty lines for Candidate Name
   for (let i = 0; i < Math.min(lines.length, 4); i++) {
     const line = lines[i];
+    const lowerLine = line.toLowerCase();
     if (
       !line.includes('@') && 
-      !line.toLowerCase().includes('http') && 
-      !line.toLowerCase().includes('github') &&
-      !line.toLowerCase().includes('linkedin') &&
-      !line.toLowerCase().includes('resume') &&
-      !line.toLowerCase().includes('cv') &&
+      !lowerLine.includes('http') && 
+      !lowerLine.includes('github') &&
+      !lowerLine.includes('linkedin') &&
+      !lowerLine.includes('resume') &&
+      !lowerLine.includes('cv') &&
+      !lowerLine.includes('phone') &&
+      !lowerLine.includes('email') &&
+      !lowerLine.includes('mobile') &&
+      !lowerLine.includes('contact') &&
       !/\d{4,}/.test(line) && // exclude phone numbers or addresses with long digit series
-      line.split(' ').length >= 2 && // names usually contain at least first and last name
+      line.split(' ').length >= 1 && // names can be 1 to 4 words
       line.split(' ').length <= 4
     ) {
       return line;
@@ -44,7 +49,8 @@ const extractEmail = (text) => {
  * @returns {string} Extracted phone number or empty string
  */
 const extractPhone = (text) => {
-  const phoneRegex = /(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/;
+  // Support both standard US/international formats and Indian 5-5 split formats (e.g. +91 83099 68940)
+  const phoneRegex = /(?:\+?91|0)?[-.\s]?[6-9]\d{4}[-.\s]?\d{5}\b|(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b|\b[6-9]\d{9}\b/;
   const match = text.match(phoneRegex);
   return match ? match[0].trim() : '';
 };
@@ -57,22 +63,31 @@ const extractPhone = (text) => {
 const extractLinks = (text) => {
   const links = { github: '', linkedin: '', portfolio: '' };
   
-  const githubRegex = /https?:\/\/(www\.)?github\.com\/[a-zA-Z0-9_-]+/i;
-  const linkedinRegex = /https?:\/\/(www\.)?linkedin\.com\/in\/[a-zA-Z0-9_-]+/i;
-  const urlRegex = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/gi;
+  // Lenient regex to support links written with or without http:// or https://
+  const githubRegex = /(?:https?:\/\/)?(?:www\.)?github\.com\/[a-zA-Z0-9_-]+/i;
+  const linkedinRegex = /(?:https?:\/\/)?(?:www\.)?linkedin\.com\/in\/[a-zA-Z0-9_-]+/i;
+  const urlRegex = /(?:https?:\/\/)?(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/gi;
 
   const gitMatch = text.match(githubRegex);
-  if (gitMatch) links.github = gitMatch[0];
+  if (gitMatch) {
+    const url = gitMatch[0];
+    links.github = url.startsWith('http') ? url : `https://${url}`;
+  }
 
   const linkMatch = text.match(linkedinRegex);
-  if (linkMatch) links.linkedin = linkMatch[0];
+  if (linkMatch) {
+    const url = linkMatch[0];
+    links.linkedin = url.startsWith('http') ? url : `https://${url}`;
+  }
 
   const allUrls = text.match(urlRegex) || [];
   const portfolioUrl = allUrls.find(url => 
     !url.toLowerCase().includes('github.com') && 
     !url.toLowerCase().includes('linkedin.com')
   );
-  if (portfolioUrl) links.portfolio = portfolioUrl;
+  if (portfolioUrl) {
+    links.portfolio = portfolioUrl.startsWith('http') ? portfolioUrl : `https://${portfolioUrl}`;
+  }
 
   return links;
 };
