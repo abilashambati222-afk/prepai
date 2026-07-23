@@ -24,7 +24,7 @@ api.interceptors.response.use(
   (error) => {
     // Parse standardized backend error structure
     const responseData = error.response?.data;
-    const message = responseData?.message || 'An unexpected network error occurred. Please try again.';
+    const message = responseData?.message || responseData?.error || 'An unexpected network error occurred. Please try again.';
     const errors = responseData?.errors || [];
 
     // Formulate a structured error package for consumption by contexts and components
