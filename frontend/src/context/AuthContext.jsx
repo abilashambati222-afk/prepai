@@ -63,7 +63,10 @@ export const AuthProvider = ({ children }) => {
       }
     } catch (err) {
       // Axios interceptor parsed error
-      const errMsg = err.message || 'Registration failed.';
+      let errMsg = err.message || 'Registration failed.';
+      if (err.errors && err.errors.length > 0) {
+        errMsg = err.errors.map(e => e.message).join(' ');
+      }
       setError(errMsg);
       showToast(errMsg, 'error');
       return { success: false, message: errMsg };
@@ -86,7 +89,10 @@ export const AuthProvider = ({ children }) => {
         return { success: true };
       }
     } catch (err) {
-      const errMsg = err.message || 'Invalid login credentials.';
+      let errMsg = err.message || 'Invalid login credentials.';
+      if (err.errors && err.errors.length > 0) {
+        errMsg = err.errors.map(e => e.message).join(' ');
+      }
       setError(errMsg);
       showToast(errMsg, 'error');
       return { success: false, message: errMsg };
