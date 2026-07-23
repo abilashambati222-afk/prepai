@@ -53,11 +53,11 @@ const errorHandler = (err, req, res, next) => {
       stack: err.stack
     });
   } else {
-    const finalError = error.isOperational ? error : new AppError('Internal Server Error', 500);
+    const finalError = error.isOperational ? error : new AppError(err.message || 'Internal Server Error', 500);
     res.status(finalError.statusCode).json({
       success: false,
       message: finalError.message,
-      errors: validationErrors.length > 0 ? validationErrors : []
+      errors: validationErrors.length > 0 ? validationErrors : [{ message: err.message }]
     });
   }
 };
